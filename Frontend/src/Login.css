@@ -1,0 +1,126 @@
+.login-container {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 100vh;
+    
+    
+  }
+  
+  .login-image {
+    flex: 1;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+  }
+  
+  .login-image img {
+    max-width: 100%;
+    height: auto;
+    border-radius: 10px;
+  }
+  
+  .login-form {
+    flex: 1;
+    background:#5a5858;
+    padding: 20px;
+    border-radius: 10px;
+    box-shadow: 0 4px 8px #fdfdfded;
+  }
+  
+  h1 {
+    color: #61dafb;
+  }
+  
+  form {
+    display: flex;
+    flex-direction: column;
+  }
+  
+  label {
+    margin-bottom: 10px;
+    color: #333;
+    padding-right: 10px;
+  }
+  
+  input {
+    padding: 10px;
+    margin-bottom: 20px;
+    border: 1px solid #ccc;
+    border-radius: 5px;
+    background-color: azure;
+  }
+  
+  button {
+    padding: 10px;
+    background-color: #61dafb;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    color: white;
+  }
+  
+  button:hover {
+    background-color: #21a1f1;
+  }
+  
+  .Quiz
+  {
+    
+    
+      display:flex;
+      flex-wrap: wrap;
+  
+     align-content:start;
+    
+     margin-right:-20px;
+    
+  }
+  .one {
+    
+    width:400px;
+    
+    overflow:hidden;
+    margin:20px;
+    margin-right: auto;
+    margin-left: auto;
+  
+    
+  }
+  .one:hover
+  {
+    border-color: aqua; /* Change to your desired hover color */
+      transform: scale(1.2);
+  }
+  .two{
+    
+    width:400px;
+    
+    overflow:hidden;
+    margin:20px;
+    margin-right: auto;
+    margin-left: auto;
+  
+    
+  }
+  .two:hover
+  {
+    border-color: aqua; /* Change to your desired hover color */
+      transform: scale(1.2);
+  }
+  .three{
+    
+    width:400px;
+    
+    overflow:hidden;
+    margin:20px;
+    margin-right: auto;
+    margin-left: auto;
+  
+    
+  }
+  .three:hover
+  {
+    border-color: aqua; /* Change to your desired hover color */
+      transform: scale(1.2);
+  }
