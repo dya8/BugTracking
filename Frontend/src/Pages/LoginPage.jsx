@@ -1,7 +1,9 @@
 import React, { useState } from "react";
+import { useNavigate } from "react-router-dom"; // Import useNavigate
 import { FaEye, FaEyeSlash } from "react-icons/fa";
 
 const LoginPage = () => {
+  const navigate = useNavigate(); // Initialize navigation
   const [formData, setFormData] = useState({
     email: "",
     password: "",
@@ -44,16 +46,33 @@ const LoginPage = () => {
           </div>
           <p className="text-right text-sm text-blue-600 cursor-pointer">Forgot password?</p>
           <button className="w-full p-3 bg-purple-700 text-white rounded-md mt-4">Sign In</button>
-        
         </div>
-        <p className="mt-4 text-gray-600">Don’t have an account? <span className="text-blue-600 cursor-pointer">Sign up</span></p>
+
+        {/* Redirect to Signup Page */}
+        <p className="mt-4 text-gray-600">
+          Don’t have an account? 
+          <span 
+            className="text-blue-600 cursor-pointer" 
+            onClick={() => navigate("/companylogin")} // Navigate to Signup Page
+          >
+            Sign up
+          </span>
+        </p>
       </div>
 
       {/* Right Side - Welcome Message */}
       <div className="w-1/2 flex flex-col justify-center items-center bg-gradient-to-r from-purple-500 to-purple-700 text-white p-8">
         <h2 className="text-3xl font-bold">Welcome Back...</h2>
-        <p className="mt-4 text-center px-8">Boost your team's productivity with seamless bug tracking and collaboration. Get started for <span className="font-bold">free</span> today!</p>
-        <button className="mt-6 p-3 bg-purple-900 rounded-md text-white">Sign Up Now!</button>
+        <p className="mt-4 text-center px-8">
+          Boost your team's productivity with seamless bug tracking and collaboration. 
+          Get started for <span className="font-bold">free</span> today!
+        </p>
+        <button 
+          className="mt-6 p-3 bg-purple-900 rounded-md text-white"
+          onClick={() => navigate("/companylogin")} // Redirect on Button Click
+        >
+          Sign Up Now!
+        </button>
       </div>
     </div>
   );
