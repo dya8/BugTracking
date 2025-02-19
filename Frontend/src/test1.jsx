@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import landing from './assets/landing.svg'
-import './LandingPage.css'; // For custom styling
+import './test1.css'; // For custom styling
 /*import register from './Register';
 import dashboard from './Dashboard';*/
 
