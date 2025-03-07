@@ -5,11 +5,20 @@ const WelcomePage = () => {
   const navigate = useNavigate();
 
   const handleLetsGo = () => {
-    navigate("/login"); // Navigate to the signup page
+    navigate("/login"); // Navigate to the login page
   };
 
   return (
-    <div className="min-h-screen flex flex-col items-center justify-center bg-gradient-to-b from-purple-400 to-purple-700 text-white text-center px-4">
+    <div
+      className="min-h-screen flex flex-col items-center justify-center text-white text-center px-4"
+      style={{
+        backgroundImage: "url('/background.png')",
+        backgroundColor: "#6B46C1", // Purple color (#6B46C1 is Tailwind's purple-700)
+        backgroundSize: "cover",
+        backgroundPosition: "center",
+        backgroundBlendMode: "multiply", // Blends image with background color
+      }}
+    >
       {/* Title */}
       <h1 className="text-4xl md:text-5xl text-white font-bold">
         Welcome to <br /> Bug Tracker!
@@ -22,7 +31,7 @@ const WelcomePage = () => {
         <span className="font-bold">Join Now!</span>
       </p>
 
-      {/* Button (Navigates to Register Page) */}
+      {/* Button */}
       <button
         onClick={handleLetsGo}
         className="mt-6 px-6 py-3 bg-purple-900 hover:bg-purple-800 text-white text-lg font-semibold rounded-lg shadow-md transition"
@@ -37,7 +46,7 @@ const WelcomePage = () => {
 
       {/* Ladybug Image */}
       <img
-        src="/ladybug.png" // Replace with actual image URL
+        src="/bug.png"
         alt="Ladybug"
         className="absolute bottom-0 left-0 w-40 md:w-52"
       />

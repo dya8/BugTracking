@@ -10,6 +10,8 @@ import TeamSignupPage from './Pages/TeamSignupPage';
 import LoginPage from './Pages/LoginPage';
 import WelcomePage from './Pages/WelcomePage';
 import LoadingPage from './Pages/LoadingPage';
+import ManageUsers from './Pages/admin/ManageUsers';
+import Test from './Pages/admin/CurrentProjects';
 function App() {
   
   return (
@@ -23,6 +25,8 @@ function App() {
       <Route path="/projectlogin" element={<ProjectSignin/>} />
       <Route path="/loading" element={<LoadingPage/>} />
      <Route path="/login" element={<LoginPage/>} />
+     <Route path="/admin" element={<ManageUsers/>} />
+      <Route path="/test" element={<Test/>} />
      </Routes>
        </Router>
   )

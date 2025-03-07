@@ -32,9 +32,9 @@ const LoadingPage = () => {
           ></div>
           <div
             className="absolute left-0 top-0 h-full flex items-center transition-transform duration-100"
-            style={{ left: `${progress}%`, transform: "translateX(-50%)" }}
+            style={{ left: `${progress}%`, transform: "translateX(-60%)" }}
           >
-            <img src="/ladybug.png" alt="Ladybug" className="w-8 h-8" />
+            <img src="/bug.png" alt="Ladybug" className="w-14 h-16" />
           </div>
         </div>
 
