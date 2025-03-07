@@ -12,6 +12,7 @@ import WelcomePage from './Pages/WelcomePage';
 import LoadingPage from './Pages/LoadingPage';
 import ManageUsers from './Pages/admin/ManageUsers';
 import Test from './Pages/admin/CurrentProjects';
+import Setting from './Pages/admin/Setting';
 function App() {
   
   return (
@@ -27,6 +28,7 @@ function App() {
      <Route path="/login" element={<LoginPage/>} />
      <Route path="/admin" element={<ManageUsers/>} />
       <Route path="/test" element={<Test/>} />
+      <Route path="/setting" element={<Setting/>} />
      </Routes>
        </Router>
   )

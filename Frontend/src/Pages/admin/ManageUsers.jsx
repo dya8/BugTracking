@@ -2,7 +2,9 @@ import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent } from "@/components/ui/card";
-import { Plus, UserPlus, Menu, Search, Settings, LogOut, Trash } from "lucide-react";
+import { Plus, Trash } from "lucide-react";
+import Sidebar from "./Sidebar"; // Import Sidebar
+import { FaSearch, FaBell, FaUser } from "react-icons/fa"; // Icons for Navbar
 
 export default function ManageUsers() {
   const [users, setUsers] = useState([{ email: "", role: "" }]);
@@ -20,84 +22,74 @@ export default function ManageUsers() {
   };
 
   const removeUserField = (index) => {
-    const newUsers = users.filter((_, i) => i !== index);
-    setUsers(newUsers);
+    setUsers(users.filter((_, i) => i !== index));
   };
 
-  const sendEmail = async (user) => {
-    try {
-      const response = await fetch("http://localhost:5000/send-email", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify(user),
-      });
-
-      const data = await response.json();
-      if (response.ok) {
-        alert("Email sent successfully!");
-        setAddedUsers((prev) => [...prev, user]); // Add user to displayed list
-      } else {
-        alert("Error sending email: " + data.message);
-      }
-    } catch (error) {
-      console.error("Error:", error);
+  const confirmUsers = () => {
+    const validUsers = users.filter(user => user.email && user.role);
+    if (validUsers.length > 0) {
+      setAddedUsers([...addedUsers, ...validUsers]);
     }
+    setUsers([{ email: "", role: "" }]);
+    setShowPopup(false);
   };
 
   return (
     <div className="flex h-screen">
       {/* Sidebar */}
-      <aside className="w-64 bg-purple-700 text-white p-5 flex flex-col">
-        <div className="flex items-center gap-2 text-xl font-semibold mb-8">
-          <Menu className="w-6 h-6" /> Menu
-        </div>
-        <nav className="flex flex-col space-y-4">
-          <button className="flex items-center gap-2 text-white text-lg bg-purple-700 ">
-            <UserPlus className="w-5 h-5 " /> Manage Users
-          </button>
-          <button className="flex items-center gap-2 text-white text-lg bg-purple-700">Current Projects</button>
-        </nav>
-        <div className="mt-auto">
-          <button className="flex items-center gap-2 text-white text-lg mb-3 bg-purple-700">
-            <Settings className="w-5 h-5" /> Settings
-          </button>
-          <button className="flex items-center gap-2 text-white text-lg bg-purple-700">
-            <LogOut className="w-5 h-5" /> Log Out
-          </button>
-        </div>
-      </aside>
+      <Sidebar />
 
       {/* Main Content */}
-      <div className="flex-1 p-5 bg-gray-100">
-        <header className="flex justify-between items-center bg-white p-3 shadow-md rounded-lg">
-          <div className="flex items-center gap-2">
-            <Search className="w-5 h-5 text-gray-500" />
-            <input type="text" placeholder="Search" className="outline-none" />
-          </div>
-          <button
-            className="flex items-center gap-2 bg-purple-600 text-white px-3 py-2 rounded-md"
-            onClick={() => setShowPopup(true)}
-          >
-            Add user <Plus className="w-4 h-4" />
-          </button>
-        </header>
+      <div className="flex-1 flex flex-col bg-gray-100">
+        
+        {/* Navbar (Integrated Directly) */}
+        <div className="flex justify-between items-center p-4 bg-white shadow-md">
+          <div className="flex items-center space-x-4">
+            {/* Search Bar */}
+            <div className="relative">
+              <FaSearch className="absolute left-2 top-2 text-gray-400" />
+              <input
+                type="text"
+                placeholder="Search"
+                className="pl-8 pr-2 py-1 border rounded-md"
+              />
+            </div>
 
-        {/* Display Added Users */}
-        <div className="mt-5 bg-white p-4 shadow rounded-lg">
-          <h2 className="text-lg font-semibold mb-3">Users</h2>
-          {addedUsers.length === 0 ? (
-            <p className="text-gray-500">No users added yet.</p>
-          ) : (
-            <ul>
-              {addedUsers.map((user, index) => (
-                <li key={index} className="border-b py-2 flex justify-between">
-                  <span>{user.email} - {user.role}</span>
-                </li>
-              ))}
-            </ul>
-          )}
+            {/* Notifications and User */}
+            <FaBell className="text-purple-700 cursor-pointer" />
+            <div className="flex items-center space-x-2 text-purple-700 cursor-pointer">
+              <span>Admin</span>
+              <FaUser className="text-purple-700" />
+            </div>
+          </div>
+        </div>
+
+        <div className="p-5">
+          <header className="flex justify-between items-center bg-white p-3 shadow-md rounded-lg">
+            <h2 className="text-lg font-semibold">Manage Users</h2>
+            <button
+              className="flex items-center gap-2 bg-purple-600 text-white px-3 py-2 rounded-md"
+              onClick={() => setShowPopup(true)}
+            >
+              Add user <Plus className="w-4 h-4" />
+            </button>
+          </header>
+
+          {/* Display Added Users */}
+          <div className="mt-5 bg-white p-4 shadow rounded-lg">
+            <h2 className="text-lg font-semibold mb-3">Users</h2>
+            {addedUsers.length === 0 ? (
+              <p className="text-gray-500">No users added yet.</p>
+            ) : (
+              <ul>
+                {addedUsers.map((user, index) => (
+                  <li key={index} className="border-b py-2 flex justify-between">
+                    <span>{user.email} - {user.role}</span>
+                  </li>
+                ))}
+              </ul>
+            )}
+          </div>
         </div>
 
         {/* Add Users Popup */}
@@ -138,13 +130,7 @@ export default function ManageUsers() {
                   <Button className="bg-red-500 text-white hover:bg-red-500" onClick={() => setShowPopup(false)}>
                     Cancel
                   </Button>
-                  <Button
-                    className="bg-purple-600 text-white hover:bg-purple-700"
-                    onClick={() => {
-                      users.forEach((user) => sendEmail(user)); // Send email and add user to content
-                      setShowPopup(false);
-                    }}
-                  >
+                  <Button className="bg-purple-600 text-white hover:bg-purple-700" onClick={confirmUsers}>
                     Confirm
                   </Button>
                 </div>
