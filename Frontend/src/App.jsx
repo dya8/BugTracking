@@ -13,6 +13,10 @@ import LoadingPage from './Pages/LoadingPage';
 import ManageUsers from './Pages/admin/ManageUsers';
 import Test from './Pages/admin/CurrentProjects';
 import Setting from './Pages/admin/Setting';
+import Settings from './Pages/developer/settings';
+import Projects from './Pages/developer/Projects';
+import AssignedBugs from './Pages/developer/Assignedbugs';
+import BugDetails from './Pages/developer/BugDetails';
 function App() {
   
   return (
@@ -29,6 +33,11 @@ function App() {
      <Route path="/admin" element={<ManageUsers/>} />
       <Route path="/test" element={<Test/>} />
       <Route path="/setting" element={<Setting/>} />
+      <Route path="/settings" element={<Settings/>} />
+      <Route path="/developer" element={<Settings/>} />
+      <Route path="/projects" element={<Projects/>} />
+      <Route path="/assigned-bugs" element={<AssignedBugs/>} />
+      <Route path="/bug-details/:id" element={<BugDetails/>} />
      </Routes>
        </Router>
   )
