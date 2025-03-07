@@ -19,6 +19,7 @@ const app = express();
 app.use(express.json()); // Middleware for JSON parsing
 
 // Define Mongoose Schemas
+// Define Mongoose Schemas
 const companySchema = new mongoose.Schema({
     company_id: { type: Number, required: true, unique: true },
     company_name: String,
@@ -35,16 +36,23 @@ const adminSchema = new mongoose.Schema({
 const projectSchema = new mongoose.Schema({
     project_id: { type: Number, required: true, unique: true },
     project_name: String,
-    company_id: { type: mongoose.Schema.Types.ObjectId, ref: 'Company' }
+    company_id: { type: mongoose.Schema.Types.ObjectId, ref: 'Company' },
+    git_id: String
 });
 
 const developerSchema = new mongoose.Schema({
     developer_id: { type: Number, required: true, unique: true },
     developer_name: String,
-    project_expertise: String,
     total_bugs_solved: Number,
+    expertise: [String],  // New field! Example: ["Frontend", "Backend"]
     email: String,
-    password: String
+    password: String,
+    success_rate: Number,  // New field! Percentage of successful bug fixes
+    solved_bugs: [{ 
+        bug_id: { type: mongoose.Schema.Types.ObjectId, ref: 'Bug' }, 
+        bug_type: String,
+        resolution_time: Number
+    }]
 });
 
 const testerSchema = new mongoose.Schema({
@@ -52,17 +60,27 @@ const testerSchema = new mongoose.Schema({
     tester_name: String,
     total_bug_reported: Number,
     email: String,
-    password: String
+    password: String,
+    bugs_reported: [{ type: mongoose.Schema.Types.ObjectId, ref: 'Bug' }], // List of bugs reported
+    bugs_verified: [{ type: mongoose.Schema.Types.ObjectId, ref: 'Bug' }]  // List of verified bugs
 });
 
 const bugSchema = new mongoose.Schema({
     bug_id: { type: Number, required: true, unique: true },
     bug_name: String,
-    bug_status: String,
+    bug_status: { type: String, enum: ["Open", "In Progress", "Resolved", "Closed"] },  // Ensures consistency
+    bug_type: String,  // UI, Backend, API, Security, Database
+    priority: { type: String, enum: ["Low", "Medium", "High", "Critical"] },  // Fix: Enum values
     reported_by: { type: mongoose.Schema.Types.ObjectId, ref: 'Tester' },
     assigned_to: { type: mongoose.Schema.Types.ObjectId, ref: 'Developer' },
     created_at: { type: Date, default: Date.now },
-    priority: String
+    resolved_at: { type: Date },  // When the bug was marked as resolved
+    resolution_time: { 
+        type: Number, 
+        default: function() { 
+            return this.resolved_at ? (this.resolved_at - this.created_at) / (1000 * 60 * 60) : null; 
+        }  // Auto-calculate hours taken to fix the bug
+    }
 });
 
 const chatroomSchema = new mongoose.Schema({
@@ -75,7 +93,7 @@ const chatroomSchema = new mongoose.Schema({
 const projectManagerSchema = new mongoose.Schema({
     project_id: { type: mongoose.Schema.Types.ObjectId, ref: 'Project' },
     manager_name: String,
-    total_projected_name: String,
+    total_projects_handled: Number,  // Fixed typo: changed from "total_projected_name"
     email: String,
     password: String
 });
