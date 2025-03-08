@@ -25,6 +25,7 @@ import Projects from './Pages/developer/Projects';
 import AssignedBugs from './Pages/developer/Assignedbugs';
 import BugDetails from './Pages/developer/BugDetails';
 import BugDetailsM from './Pages/manager/Bugdetails';
+import ManageTeam from './Pages/manager/ManageTeam';
 
 function App() {
   
@@ -54,7 +55,8 @@ function App() {
       <Route path="/assigned-bugs" element={<AssignedBugs/>} />
       <Route path="/bug-details/:id" element={<BugDetails/>} />
       <Route path="/track-bugs" element={<BugDetailsM/>} />
-
+      <Route path="/manage-team" element={<ManageTeam/>}/>
+      
      </Routes>
        </Router>
   )

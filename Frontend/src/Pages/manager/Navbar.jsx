@@ -1,3 +1,4 @@
+import React from "react";
 import { FaSearch, FaBell, FaUser } from "react-icons/fa";
 
 export default function Navbar() {

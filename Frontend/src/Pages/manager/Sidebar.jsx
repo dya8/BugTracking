@@ -33,7 +33,6 @@ export default function Sidebar() {
   );
 }
 
-// SidebarItem Component for Reusability
 function SidebarItem({ to, icon, label, isOpen }) {
   return (
     <Link to={to} className="flex items-center space-x-3 px-3 py-3 rounded-md hover:bg-purple-600 transition">
