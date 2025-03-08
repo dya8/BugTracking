@@ -81,6 +81,23 @@ export default function ReportBugForm() {
                   }
                 }}
               />
+               <TextField 
+                label="Bug Status" 
+                name="bugStatus"
+                value={formData.bugStatus} 
+               onChange={handleChange} 
+                fullWidth 
+                variant="outlined" 
+                sx={{
+                  "& label": { color: "#9333ea" },
+                  "& .MuiInputLabel-root.Mui-focused": { color: "#9333ea" },
+                  "& .MuiOutlinedInput-root": {
+                    borderRadius: "8px",
+                    "& fieldset": { borderColor: "#9333ea" },
+                    "&:hover fieldset": { borderColor: "#9333ea !important" }
+                  }
+                }}
+              />
             </div>
             <div className="space-y-4">
               <FormControl fullWidth variant="outlined" sx={{ borderRadius: "8px", "& .MuiInputLabel-root": { color: "#9333ea" }, "& fieldset": { borderColor: "#9333ea" }, "&:hover fieldset": { borderColor: "#9333ea !important" }}}>
