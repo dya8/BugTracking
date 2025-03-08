@@ -13,12 +13,19 @@ import LoadingPage from './Pages/LoadingPage';
 import ManageUsers from './Pages/admin/ManageUsers';
 import Test from './Pages/admin/CurrentProjects';
 import Setting from './Pages/admin/Setting';
+<<<<<<< HEAD
 import ReportBug from './Pages/tester/ReportBug';
 import Dashboard from './Pages/tester/Dashboard';
 import ChatRoom from './Pages/tester/Chatroom';
 import CurrentProjects from './Pages/tester/CurrentProject';
 import Settings from './Pages/tester/Settings';
 
+=======
+import Settings from './Pages/developer/settings';
+import Projects from './Pages/developer/Projects';
+import AssignedBugs from './Pages/developer/Assignedbugs';
+import BugDetails from './Pages/developer/BugDetails';
+>>>>>>> 032ddaf5417e96e6addaa2e2a8404f383d5b7fb3
 function App() {
   
   return (
@@ -35,12 +42,20 @@ function App() {
      <Route path="/admin" element={<ManageUsers/>} />
       <Route path="/test" element={<Test/>} />
       <Route path="/setting" element={<Setting/>} />
+<<<<<<< HEAD
       <Route path="/report-bug" element={<ReportBug/>} />
       <Route path="/dashboard" element={<Dashboard/>} />
       <Route path="/chat-room" element={<ChatRoom/>} />
       <Route path="/projects" element={<CurrentProjects/>
       } />
       <Route path="/tester-settings" element={<Settings/>}/>
+=======
+      <Route path="/settings" element={<Settings/>} />
+      <Route path="/developer" element={<Settings/>} />
+      <Route path="/projects" element={<Projects/>} />
+      <Route path="/assigned-bugs" element={<AssignedBugs/>} />
+      <Route path="/bug-details/:id" element={<BugDetails/>} />
+>>>>>>> 032ddaf5417e96e6addaa2e2a8404f383d5b7fb3
      </Routes>
        </Router>
   )
