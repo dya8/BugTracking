@@ -13,6 +13,12 @@ import LoadingPage from './Pages/LoadingPage';
 import ManageUsers from './Pages/admin/ManageUsers';
 import Test from './Pages/admin/CurrentProjects';
 import Setting from './Pages/admin/Setting';
+import ReportBug from './Pages/tester/ReportBug';
+import Dashboard from './Pages/tester/Dashboard';
+import ChatRoom from './Pages/tester/Chatroom';
+import CurrentProjects from './Pages/tester/CurrentProject';
+import Settings from './Pages/tester/Settings';
+
 function App() {
   
   return (
@@ -29,6 +35,12 @@ function App() {
      <Route path="/admin" element={<ManageUsers/>} />
       <Route path="/test" element={<Test/>} />
       <Route path="/setting" element={<Setting/>} />
+      <Route path="/report-bug" element={<ReportBug/>} />
+      <Route path="/dashboard" element={<Dashboard/>} />
+      <Route path="/chat-room" element={<ChatRoom/>} />
+      <Route path="/projects" element={<CurrentProjects/>
+      } />
+      <Route path="/tester-settings" element={<Settings/>}/>
      </Routes>
        </Router>
   )
