@@ -6,6 +6,7 @@ const ProjectSignin = () => {
   const [formData, setFormData] = useState({
     name: "",
     email: "",
+    githubId: "",
   });
 
   const handleChange = (e) => {
@@ -35,6 +36,14 @@ const ProjectSignin = () => {
             placeholder="His/Her Email Address"
             className="w-full p-3 rounded-md bg-purple-100 text-purple-700 focus:outline-none"
             value={formData.email}
+            onChange={handleChange}
+          />
+          <input
+            type="text"
+            name="github-id"
+            placeholder="Project Github ID"
+            className="w-full p-3 rounded-md bg-purple-100 text-purple-700 focus:outline-none"
+            value={formData.githubId}
             onChange={handleChange}
           />
          <button
