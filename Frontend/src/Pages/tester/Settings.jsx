@@ -2,7 +2,7 @@ import { FaUser, FaEdit, FaBell } from "react-icons/fa";
 import Navbar from "./Navbar";
 import Sidebar from "./Sidebar";
 
-export default function Settings() {
+export default function Tester_Settings() {
   return (
     <div className="flex">
       {/* Sidebar */}
