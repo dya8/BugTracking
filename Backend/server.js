@@ -41,6 +41,7 @@ const projectSchema = new mongoose.Schema({
 
 const developerSchema = new mongoose.Schema({
     developer_id: { type: Number, required: true, unique: true },
+    project_ids: [{ type: mongoose.Schema.Types.ObjectId, ref: 'Project' }], 
     developer_name: String,
     total_bugs_solved: Number,
     email: String,
@@ -55,6 +56,7 @@ const developerSchema = new mongoose.Schema({
 
 const testerSchema = new mongoose.Schema({
     tester_id: { type: Number, required: true, unique: true },
+    project_ids: [{ type: mongoose.Schema.Types.ObjectId, ref: 'Project' }], 
     tester_name: String,
     total_bug_reported: Number,
     email: String,
@@ -66,6 +68,8 @@ const testerSchema = new mongoose.Schema({
 const bugSchema = new mongoose.Schema({
     bug_id: { type: Number, required: true, unique: true },
     bug_name: String,
+    project_id: { type: mongoose.Schema.Types.ObjectId, ref: 'Project' },
+    bug_description: String,
     bug_status: { type: String, enum: ["Open", "In Progress", "Resolved", "Verified", "Reopen"] },
     bug_type: String,  
     priority: { type: String, enum: ["Low", "Medium", "High", "Critical"] },
@@ -73,18 +77,11 @@ const bugSchema = new mongoose.Schema({
     assigned_to: { type: mongoose.Schema.Types.ObjectId, ref: 'Developer' },
     created_at: { type: Date, default: Date.now },
     resolved_at: { type: Date },
-    resolution_time: {
-        type: String, 
+    resolution_time: { 
+        type: Number,  
         default: function() {
-            if (this.resolved_at) {
-                const diff = this.resolved_at - this.created_at;
-                const hours = Math.floor(diff / (1000 * 60 * 60));
-                const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
-                const seconds = Math.floor((diff % (1000 * 60)) / 1000);
-                return `${String(hours).padStart(2, '0')}:${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`;
-            }
-            return null;
-        }
+            return this.resolved_at ? (this.resolved_at - this.created_at) / (1000 * 60 * 60) : null;  
+        } // Store as hours instead of "HH:MM:SS"
     }
 });
 
@@ -96,7 +93,7 @@ const chatroomSchema = new mongoose.Schema({
 });
 
 const projectManagerSchema = new mongoose.Schema({
-    project_id: { type: mongoose.Schema.Types.ObjectId, ref: 'Project' },
+    project_ids: [{ type: mongoose.Schema.Types.ObjectId, ref: 'Project' }], 
     manager_name: String,
     total_projects_handled: Number,
     email: String,
