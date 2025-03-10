@@ -13,19 +13,17 @@ import LoadingPage from './Pages/LoadingPage';
 import ManageUsers from './Pages/admin/ManageUsers';
 import Test from './Pages/admin/CurrentProjects';
 import Setting from './Pages/admin/Setting';
-
+import Chatroom from './Pages/developer/Chatroom';
 import ReportBug from './Pages/tester/ReportBug';
 import Dashboard from './Pages/tester/Dashboard';
-import ChatRoom from './Pages/tester/Chatroom';
+import ChatRoom from './Pages/tester/ChatRoom';
 import CurrentProjects from './Pages/tester/CurrentProject';
 import Tester_Settings from './Pages/tester/Settings';
-
+import Notifications from './Pages/admin/Noti';
 import Settings from './Pages/developer/settings';
 import Projects from './Pages/developer/Projects';
 import AssignedBugs from './Pages/developer/Assignedbugs';
 import BugDetails from './Pages/developer/BugDetails';
-import BugDetailsM from './Pages/manager/Bugdetails';
-import ManageTeam from './Pages/manager/ManageTeam';
 
 function App() {
   
@@ -46,17 +44,15 @@ function App() {
       <Route path="/report-bug" element={<ReportBug/>} />
       <Route path="/dashboard" element={<Dashboard/>} />
       <Route path="/chat-room" element={<ChatRoom/>} />
-      <Route path="/projects" element={<CurrentProjects/>
-      } />
+      <Route path="/projects" element={<CurrentProjects/>} />
       <Route path="/tester-settings" element={<Tester_Settings/>}/>
       <Route path="/settings" element={<Settings/>} />
       <Route path="/developer" element={<Settings/>} />
       <Route path="/projects" element={<Projects/>} />
       <Route path="/assigned-bugs" element={<AssignedBugs/>} />
       <Route path="/bug-details/:id" element={<BugDetails/>} />
-      <Route path="/track-bugs" element={<BugDetailsM/>} />
-      <Route path="/manage-team" element={<ManageTeam/>}/>
-      
+      <Route path="/chatroom" element={<Chatroom/>} />
+      <Route path="/notifications" element={<Notifications/>} />
      </Routes>
        </Router>
   )

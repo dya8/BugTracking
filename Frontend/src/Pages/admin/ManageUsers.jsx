@@ -3,13 +3,16 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent } from "@/components/ui/card";
 import { Plus, Trash } from "lucide-react";
-import Sidebar from "./Sidebar"; // Import Sidebar
-import { FaSearch, FaBell, FaUser } from "react-icons/fa"; // Icons for Navbar
+import Sidebar from "./Sidebar"; 
+import { FaSearch, FaBell, FaUser } from "react-icons/fa"; 
+import { useNavigate } from "react-router-dom";  // ✅ Import useNavigate
 
 export default function ManageUsers() {
   const [users, setUsers] = useState([{ email: "", role: "" }]);
   const [addedUsers, setAddedUsers] = useState([]);
   const [showPopup, setShowPopup] = useState(false);
+
+  const navigate = useNavigate(); // ✅ Initialize navigate
 
   const handleInputChange = (index, field, value) => {
     const newUsers = [...users];
@@ -36,16 +39,14 @@ export default function ManageUsers() {
 
   return (
     <div className="flex h-screen">
-      {/* Sidebar */}
       <Sidebar />
 
       {/* Main Content */}
       <div className="flex-1 flex flex-col bg-gray-100">
         
-        {/* Navbar (Integrated Directly) */}
+        {/* Navbar */}
         <div className="flex justify-between items-center p-4 bg-white shadow-md">
           <div className="flex items-center space-x-4">
-            {/* Search Bar */}
             <div className="relative">
               <FaSearch className="absolute left-2 top-2 text-gray-400" />
               <input
@@ -56,7 +57,10 @@ export default function ManageUsers() {
             </div>
 
             {/* Notifications and User */}
-            <FaBell className="text-purple-700 cursor-pointer" />
+            <FaBell 
+              className="text-purple-700 cursor-pointer" 
+              onClick={() => navigate("/notifications")} // ✅ Fix: Navigate on click
+            />
             <div className="flex items-center space-x-2 text-purple-700 cursor-pointer">
               <span>Admin</span>
               <FaUser className="text-purple-700" />

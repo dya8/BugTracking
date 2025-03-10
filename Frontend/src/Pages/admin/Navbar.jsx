@@ -1,9 +1,11 @@
 import { FaSearch, FaPlus, FaBell, FaUser } from "react-icons/fa";
+import { useNavigate } from "react-router-dom";
 
 export default function Navbar({ setShowModal }) {
+  const navigate = useNavigate();
+
   return (
     <div className="flex justify-between items-center p-4 bg-white shadow-md">
-      
       <div className="flex items-center space-x-4">
         {/* Search Bar */}
         <div className="relative">
@@ -24,7 +26,10 @@ export default function Navbar({ setShowModal }) {
         </button>
 
         {/* Notifications and User */}
-        <FaBell className="text-purple-700 cursor-pointer" />
+        <FaBell
+          className="text-purple-700 cursor-pointer"
+          onClick={() => navigate("/notifications")} // Redirect on click
+        />
         <div className="flex items-center space-x-2 text-purple-700 cursor-pointer">
           <span>Admin</span>
           <FaUser className="text-purple-700" />
