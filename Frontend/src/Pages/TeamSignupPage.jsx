@@ -92,8 +92,10 @@ import axios from "axios";
 const TeamSignupPage = () => {
   const navigate = useNavigate();
 
+  const [companyId, setCompanyId] = useState(""); // Input for company ID
   const [collaborators, setCollaborators] = useState([{ email: "", role: "" }]);
   const [error, setError] = useState("");
+  const [successMessage, setSuccessMessage] = useState("");
 
   const handleChange = (index, e) => {
     const updatedCollaborators = [...collaborators];
@@ -101,19 +103,32 @@ const TeamSignupPage = () => {
     setCollaborators(updatedCollaborators);
   };
 
+  const handleCompanyIdChange = (e) => {
+    setCompanyId(e.target.value);
+  };
+
   const addCollaborator = () => {
     setCollaborators([...collaborators, { email: "", role: "" }]);
   };
 
   const handleSubmit = async () => {
+    if (!companyId) {
+      setError("Company ID is required!");
+      return;
+    }
+
     try {
       const response = await axios.post("http://localhost:5000/api/team-signup", {
         collaborators,
+        company_id: companyId, // Sending company_id to backend
       });
-      alert(response.data.message);
-      navigate("/loading");
+
+      setSuccessMessage(response.data.message);
+      setError("");
+      setTimeout(() => navigate("/login"), 2000); // Navigate after showing message
     } catch (err) {
       setError(err.response?.data?.message || "Something went wrong!");
+      setSuccessMessage("");
     }
   };
 
@@ -125,6 +140,14 @@ const TeamSignupPage = () => {
           Add your team <br /> collaborators
         </h2>
         <div className="mt-6 w-80 space-y-4">
+          <input
+            type="integer"
+            placeholder="Enter Company ID"
+            className="w-full p-3 rounded-md bg-purple-100 text-purple-500 focus:outline-none"
+            value={companyId}
+            onChange={handleCompanyIdChange}
+          />
+
           {collaborators.map((collab, index) => (
             <div key={index} className="flex space-x-2">
               <input
@@ -148,9 +171,10 @@ const TeamSignupPage = () => {
               </select>
             </div>
           ))}
+
           <button
             onClick={addCollaborator}
-            className="px-4 py-2 border-[2px] border-purple-500 border-solid text-purple-500 bg-transparent rounded-md hover:bg-purple-100"
+            className="px-4 py-2 border-[2px] border-purple-500 text-purple-500 bg-transparent rounded-md hover:bg-purple-100"
           >
             Add Another
           </button>
@@ -161,7 +185,9 @@ const TeamSignupPage = () => {
           >
             Finish Setup
           </button>
+
           {error && <p className="text-red-500 mt-2">{error}</p>}
+          {successMessage && <p className="text-green-500 mt-2">{successMessage}</p>}
         </div>
       </div>
 
@@ -172,7 +198,10 @@ const TeamSignupPage = () => {
           Get started with your new project by efficiently tracking bugs and
           collaborating with your team. <span className="font-bold">Sign In Now!</span>
         </p>
-        <button className="mt-6 p-3 bg-purple-900 rounded-md text-white" onClick={() => navigate("/login")}>
+        <button
+          className="mt-6 p-3 bg-purple-900 rounded-md text-white"
+          onClick={() => navigate("/login")}
+        >
           Sign In Now!
         </button>
       </div>

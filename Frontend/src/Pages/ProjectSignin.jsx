@@ -93,29 +93,36 @@ const ProjectSignin = () => {
 export default ProjectSignin;**/}
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import axios from "axios"; // Import axios for API calls
+import axios from "axios";
 
 const ProjectSignin = () => {
   const navigate = useNavigate();
   const [formData, setFormData] = useState({
-    name: "",
+    project_name: "",
     email: "",
-    githubId: "",
+    git_id: "",
+    manager_name: "",
   });
 
-  const [error, setError] = useState(""); // For handling errors
+  const [error, setError] = useState("");
+  const [loading, setLoading] = useState(false);
 
   const handleChange = (e) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
   };
 
   const handleSubmit = async () => {
+    setLoading(true);
+    setError("");
+
     try {
       const response = await axios.post("http://localhost:5000/api/project-signup", formData);
-      alert(response.data.message); // Show success message
-      navigate("/team"); // Redirect to the next step
+      alert(response.data.message);
+      navigate("/team");
     } catch (err) {
       setError(err.response?.data?.message || "Something went wrong!");
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -130,10 +137,10 @@ const ProjectSignin = () => {
         <div className="mt-6 w-80 space-y-4">
           <input
             type="text"
-            name="name"
+            name="manager_name"
             placeholder="Project Manager’s Name"
             className="w-full p-3 rounded-md bg-purple-100 text-purple-700 focus:outline-none"
-            value={formData.name}
+            value={formData.manager_name}
             onChange={handleChange}
           />
           <input
@@ -146,14 +153,27 @@ const ProjectSignin = () => {
           />
           <input
             type="text"
-            name="githubId"
-            placeholder="Project GitHub ID"
+            name="project_name"
+            placeholder="Project Name"
             className="w-full p-3 rounded-md bg-purple-100 text-purple-700 focus:outline-none"
-            value={formData.githubId}
+            value={formData.project_name}
             onChange={handleChange}
           />
-          <button className="w-full p-3 bg-purple-700 text-white rounded-md mt-4" onClick={handleSubmit}>
-            Continue
+          <input
+            type="text"
+            name="git_id"
+            placeholder="Project GitHub ID"
+            className="w-full p-3 rounded-md bg-purple-100 text-purple-700 focus:outline-none"
+            value={formData.git_id}
+            onChange={handleChange}
+          />
+
+          <button
+            className="w-full p-3 bg-purple-700 text-white rounded-md mt-4"
+            onClick={handleSubmit}
+            disabled={loading}
+          >
+            {loading ? "Submitting..." : "Continue"}
           </button>
           {error && <p className="text-red-500 mt-2">{error}</p>}
         </div>

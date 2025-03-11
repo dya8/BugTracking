@@ -1,5 +1,6 @@
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
+import axios from "axios";
 
 const CompanySignin = () => {
   const navigate = useNavigate();
@@ -7,9 +8,24 @@ const CompanySignin = () => {
     companyName: "",
     companyEmail: "",
   });
+  const [error, setError] = useState("");
 
   const handleChange = (e) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
+  };
+
+  const handleSubmit = async () => {
+    try {
+      const response = await axios.post("http://localhost:5000/api/company-signup", {
+        company_name: formData.companyName,
+        email: formData.companyEmail,
+      });
+
+      alert(response.data.message);
+      navigate("/signup"); // Navigate after successful signup
+    } catch (err) {
+      setError(err.response?.data?.message || "Something went wrong!");
+    }
   };
 
   return (
@@ -45,12 +61,13 @@ const CompanySignin = () => {
             onChange={handleChange}
           />
           <button
-             className="w-full p-3 bg-purple-700 text-white rounded-md mt-4"
-             onClick={() => navigate("/signup")}
-            >
-             Continue
-            </button>
+            className="w-full p-3 bg-purple-700 text-white rounded-md mt-4"
+            onClick={handleSubmit} // Call handleSubmit on click
+          >
+            Continue
+          </button>
 
+          {error && <p className="text-red-500 mt-2">{error}</p>}
         </div>
 
         <p className="mt-4 text-gray-600">

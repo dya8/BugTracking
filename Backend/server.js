@@ -302,7 +302,6 @@ router.post("/api/auth/login", async (req, res) => {
       res.status(400).json({ error: error.message });
     }
   });
- 
 
   // ✅ Admin Signup API
  router.post("/signup", async (req, res) => {
