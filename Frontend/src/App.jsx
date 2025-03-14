@@ -26,7 +26,9 @@ import AssignedBugs from './Pages/developer/Assignedbugs';
 import BugDetails from './Pages/developer/BugDetails';
 import BugDetailsM from './Pages/manager/Bugdetails';
 import ManageTeam from './Pages/manager/ManageTeam';
-
+import CurrProject from './Pages/manager/Currproject';
+import TrackBugs from './Pages/manager/Trackbugs';
+import ReportedBugs from './Pages/manager/Reportbugs';
 function App() {
   
   return (
@@ -57,6 +59,9 @@ function App() {
       <Route path="/notifications" element={<Notifications/>} />
       <Route path="/track-bugs" element={<BugDetailsM/>} />
       <Route path="/manage-team" element={<ManageTeam/>}/>
+      <Route path="/current-projects" element={<CurrProject/>}/>
+      <Route path="/trackbugs" element={<TrackBugs/>}/>
+      <Route path="/reported-bugs" element={<ReportedBugs/>}/>
      </Routes>
        </Router>
   )

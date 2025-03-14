@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import { Link } from "react-router-dom";
-import { FaUsers, FaFolderOpen, FaBug, FaExclamationTriangle, FaCog, FaSignOutAlt, FaBars } from "react-icons/fa";
+import { FaUsers, FaFolderOpen, FaBug, FaExclamationTriangle, FaClock, FaCog, FaSignOutAlt, FaBars, FaTachometerAlt } from "react-icons/fa";
 
 export default function Sidebar() {
   const [isOpen, setIsOpen] = useState(true);
@@ -18,16 +18,18 @@ export default function Sidebar() {
 
       {/* Menu Items */}
       <nav className="space-y-4 flex-1">
-        <SidebarItem to="/manage-team" icon={<FaUsers size={18} />} label="Manage Team" isOpen={isOpen} />
-        <SidebarItem to="/current-projects" icon={<FaFolderOpen size={18} />} label="Current Projects" isOpen={isOpen} />
-        <SidebarItem to="/track-bugs" icon={<FaBug size={18} />} label="Track Bugs" isOpen={isOpen} />
-        <SidebarItem to="/reported-bugs" icon={<FaExclamationTriangle size={18} />} label="Reported Bugs" isOpen={isOpen} />
+        <SidebarItem to="/dashboard" icon={<FaTachometerAlt size={18} className="text-white" />} label="Dashboard" isOpen={isOpen} />
+        <SidebarItem to="/manage-team" icon={<FaUsers size={18} className="text-white" />} label="Manage Team" isOpen={isOpen} />
+        <SidebarItem to="/current-projects" icon={<FaFolderOpen size={18} className="text-white" />} label="Current Projects" isOpen={isOpen} />
+        <SidebarItem to="/trackbugs" icon={<FaBug size={18} className="text-white" />} label="Track Bugs" isOpen={isOpen} />
+        <SidebarItem to="/reported-bugs" icon={<FaExclamationTriangle size={18} className="text-white" />} label="Reported Bugs" isOpen={isOpen} />
+        <SidebarItem to="/assign-due" icon={<FaClock size={18} className="text-white" />} label="Assign Due" isOpen={isOpen} />
       </nav>
 
       {/* Footer Items */}
       <div className="space-y-3">
-        <SidebarItem to="/settings" icon={<FaCog size={18} />} label="Settings" isOpen={isOpen} />
-        <SidebarItem to="/logout" icon={<FaSignOutAlt size={18} />} label="Log Out" isOpen={isOpen} />
+        <SidebarItem to="/settings" icon={<FaCog size={18} className="text-white" />} label="Settings" isOpen={isOpen} />
+        <SidebarItem to="/logout" icon={<FaSignOutAlt size={18} className="text-white" />} label="Log Out" isOpen={isOpen} />
       </div>
     </aside>
   );

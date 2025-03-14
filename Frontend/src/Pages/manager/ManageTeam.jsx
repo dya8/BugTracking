@@ -5,31 +5,35 @@ import Navbar from "./Navbar";
 
 const ManageTeam = () => {
   const [users, setUsers] = useState([
-    { id: 1, name: "User 1", role: "Developer" },
-    { id: 2, name: "User 2", role: "Designer" },
-    { id: 3, name: "User 3", role: "Manager" },
-    { id: 4, name: "User 4", role: "QA Tester" },
-    { id: 5, name: "User 5", role: "Product Owner" },
-    { id: 6, name: "User 6", role: "Backend Engineer" },
+    { id: 1, name: "User 1", role: "Developer", selected: false },
+    { id: 2, name: "User 2", role: "Designer", selected: false },
+    { id: 3, name: "User 3", role: "Manager", selected: false },
+    { id: 4, name: "User 4", role: "QA Tester", selected: false },
+    { id: 5, name: "User 5", role: "Product Owner", selected: false },
+    { id: 6, name: "User 6", role: "Backend Engineer", selected: false },
   ]);
+
+  const [selectAll, setSelectAll] = useState(false);
+
+  const toggleSelectAll = () => {
+    const newSelectAll = !selectAll;
+    setSelectAll(newSelectAll);
+    setUsers(users.map(user => ({ ...user, selected: newSelectAll })));
+  };
+
+  const toggleUserSelection = (id) => {
+    setUsers(users.map(user => user.id === id ? { ...user, selected: !user.selected } : user));
+  };
 
   return (
     <div className="flex h-screen">
-      {/* Sidebar */}
       <Sidebar />
-
-      {/* Main Content */}
       <div className="flex-1 flex flex-col bg-gray-100">
-        {/* Navbar */}
         <Navbar />
-
-        {/* Manage Team Section */}
         <div className="p-6">
           <h2 className="text-xl font-bold text-purple-700 flex items-center">
             <span className="text-lg mr-2">ℹ</span> Manage Team
           </h2>
-
-          {/* Search Bar and User Count */}
           <div className="flex justify-between items-center my-4">
             <p className="text-gray-700 text-lg">
               All users <span className="font-bold text-purple-600">{users.length}</span>
@@ -43,14 +47,12 @@ const ManageTeam = () => {
               />
             </div>
           </div>
-
-          {/* Users Table */}
           <div className="bg-white p-4 rounded-lg shadow">
             <table className="w-full border-collapse">
               <thead>
                 <tr className="bg-purple-100 text-gray-700">
                   <th className="px-4 py-2 text-left">
-                    <input type="checkbox" />
+                    <input type="checkbox" checked={selectAll} onChange={toggleSelectAll} />
                   </th>
                   <th className="px-4 py-2 text-left">User Name</th>
                   <th className="px-4 py-2 text-left">Role</th>
@@ -61,7 +63,11 @@ const ManageTeam = () => {
                 {users.map((user) => (
                   <tr key={user.id} className="border-b">
                     <td className="px-4 py-2">
-                      <input type="checkbox" />
+                      <input 
+                        type="checkbox" 
+                        checked={user.selected} 
+                        onChange={() => toggleUserSelection(user.id)} 
+                      />
                     </td>
                     <td className="px-4 py-2">{user.name}</td>
                     <td className="px-4 py-2">{user.role}</td>
@@ -75,8 +81,6 @@ const ManageTeam = () => {
               </tbody>
             </table>
           </div>
-
-          {/* Pagination */}
           <div className="flex justify-center mt-4 space-x-2 text-purple-600">
             <span className="cursor-pointer bg-purple-200 px-3 py-1 rounded">1</span>
             <span className="cursor-pointer hover:underline">2</span>
