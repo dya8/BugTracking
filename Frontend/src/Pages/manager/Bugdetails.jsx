@@ -70,7 +70,7 @@ const BugDetailsM = () => {
             {bug.status === "Stuck" && (
               <form onSubmit={handleSubmit} className="mt-6 bg-gray-100 p-4 rounded-lg shadow-md">
                 {/* Reassign Dropdown (Optional) */}
-                <label className="block text-purple-700 font-semibold mb-1">Reassign to (Optional):</label>
+                <label className="block text-purple-700 font-semibold mb-1">Reassign to (Required):</label>
                 <select
                   className="w-full p-2 border border-gray-300 rounded-md mb-4 bg-white text-black"
                   value={selectedDeveloper}

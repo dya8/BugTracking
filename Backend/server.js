@@ -157,88 +157,101 @@ mongoose
 // Define Mongoose Schemas
 const companySchema = new mongoose.Schema({
     company_id: { type: Number, required: true, unique: true },
-    company_name: String,
-    email: String
+    company_name:{ type: String,required: true},
+    email: {type: String, required: true, unique: true}
 });
 
 const adminSchema = new mongoose.Schema({
     admin_id: { type: Number, required: true, unique: true },
     admin_name: String,
-    email: String,
+    company_id: { type: mongoose.Schema.Types.ObjectId, ref: 'Company' },
+    email: { type: String, required: true },
     password: String
 });
 
 const projectSchema = new mongoose.Schema({
-    project_id: { type: Number, required: true, unique: true },
-    project_name: String,
-    company_id: { type: mongoose.Schema.Types.ObjectId, ref: 'Company' },
-    git_id: String
-});
+  project_id: { type: Number, required: true, unique: true },
+  project_name: { type: String, required: true },
+  company_id: { type: mongoose.Schema.Types.ObjectId, ref: 'Company', required: true },  // Reference to Company
+  git_id: { type: String, unique: true },  // Ensure git_id is unique
+}, { timestamps: true });
 
 const developerSchema = new mongoose.Schema({
-    developer_id: { type: Number, required: true, unique: true },
-    developer_name: String,
-    total_bugs_solved: Number,
-    email: String,
-    password: String,
-    success_rate: Number,  
-    solved_bugs: [{ 
-        bug_id: { type: mongoose.Schema.Types.ObjectId, ref: 'Bug' }, 
-        bug_type: String,
-        resolution_time: Number
-    }]
+  developer_id: { type: Number, required: true, unique: true },
+  project_id: { type: mongoose.Schema.Types.ObjectId, ref: 'Project', required: true }, 
+  company_id: { type: mongoose.Schema.Types.ObjectId, ref: 'Company', required: true }, 
+  developer_name: { type: String, required: true },  
+  email: { type: String, required: true, unique: true },  
+  password: { type: String, required: true },
+  total_bugs_solved: { type: Number, default: 0 },  
+  success_rate: { type: Number, default: 0 }, 
+  solved_bugs: [{ 
+      bug_id: { type: mongoose.Schema.Types.ObjectId, ref: 'Bug' },  
+      bug_type: String,
+      resolution_time: Number 
+  }]
 });
 
 const testerSchema = new mongoose.Schema({
-    tester_id: { type: Number, required: true, unique: true },
-    tester_name: String,
-    total_bug_reported: Number,
-    email: String,
-    password: String,
-    bugs_reported: [{ type: mongoose.Schema.Types.ObjectId, ref: 'Bug' }],
-    bugs_verified: [{ type: mongoose.Schema.Types.ObjectId, ref: 'Bug' }]
+  tester_id: { type: Number, required: true, unique: true },
+  project_id: { type: mongoose.Schema.Types.ObjectId, ref: 'Project', required: true }, 
+  company_id: { type: mongoose.Schema.Types.ObjectId, ref: 'Company', required: true }, 
+  tester_name: { type: String, required: true },
+  total_bug_reported: { type: Number, default: 0 },  
+  email: { type: String, required: true, unique: true },  
+  password: { type: String, required: true },  
+  bugs_reported: [{ type: mongoose.Schema.Types.ObjectId, ref: 'Bug' }],  
+  bugs_verified: [{ type: mongoose.Schema.Types.ObjectId, ref: 'Bug' }]   
 });
 
 const bugSchema = new mongoose.Schema({
-    bug_id: { type: Number, required: true, unique: true },
-    bug_name: String,
-    bug_status: { type: String, enum: ["Open", "In Progress", "Resolved", "Verified", "Reopen"] },
-    bug_type: String,  
-    priority: { type: String, enum: ["Low", "Medium", "High", "Critical"] },
-    reported_by: { type: mongoose.Schema.Types.ObjectId, ref: 'Tester' },
-    assigned_to: { type: mongoose.Schema.Types.ObjectId, ref: 'Developer' },
-    created_at: { type: Date, default: Date.now },
-    resolved_at: { type: Date },
-    resolution_time: {
-        type: String, 
-        default: function() {
-            if (this.resolved_at) {
-                const diff = this.resolved_at - this.created_at;
-                const hours = Math.floor(diff / (1000 * 60 * 60));
-                const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
-                const seconds = Math.floor((diff % (1000 * 60)) / 1000);
-                return `${String(hours).padStart(2, '0')}:${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`;
-            }
-            return null;
-        }
-    }
+  bug_id: { type: Number, required: true, unique: true },
+  project_id: { type: mongoose.Schema.Types.ObjectId, ref: 'Project', required: true },  
+  bug_name: { type: String, required: true },  
+  bug_status: { 
+      type: String, 
+      enum: ["Open", "In Progress", "Resolved", "Verified", "Reopen"], 
+      default: "Open" 
+  },
+  bug_type: { type: String, required: true }, 
+  priority: { 
+      type: String, 
+      enum: ["Low", "Medium", "High", "Critical"], 
+      default: "Medium"  
+  },
+  reported_by: { type: mongoose.Schema.Types.ObjectId, ref: 'Tester', required: true }, 
+  assigned_to: { type: mongoose.Schema.Types.ObjectId, ref: 'Developer' },  
+  assigned_at: { type: Date }, 
+  created_at: { type: Date, default: Date.now },
+  resolved_at: { type: Date },
+  resolution_time: { 
+      type: Number,
+      default: function() {
+          return this.resolved_at ? (this.resolved_at - this.created_at) / (1000 * 60 * 60) : null;  
+      }
+  }
 });
 
 const chatroomSchema = new mongoose.Schema({
-    chatroom_id: { type: Number, required: true, unique: true },
-    bug_id: { type: mongoose.Schema.Types.ObjectId, ref: 'Bug' },
-    project_id: { type: mongoose.Schema.Types.ObjectId, ref: 'Project' },
-    created_at: { type: Date, default: Date.now }
+  bug_id: { type: mongoose.Schema.Types.ObjectId, ref: 'Bug', required: true }, 
+  project_id: { type: mongoose.Schema.Types.ObjectId, ref: 'Project', required: true }, 
+  created_at: { type: Date, default: Date.now }, 
+  messages: [{
+      sender_id: { type: mongoose.Schema.Types.ObjectId, required: true, refPath: 'sender_type' },
+      sender_type: { type: String, enum: ["Developer", "Tester"], required: true }, 
+      message: { type: String, required: true }, 
+      timestamp: { type: Date, default: Date.now } 
+  }]
 });
 
 const projectManagerSchema = new mongoose.Schema({
-    project_id: { type: mongoose.Schema.Types.ObjectId, ref: 'Project' },
-    manager_name: String,
-    total_projects_handled: Number,
-    email: String,
-    password: String
+  project_id: [{ type: mongoose.Schema.Types.ObjectId, ref: 'Project' }],  
+  company_id: { type: mongoose.Schema.Types.ObjectId, ref: 'Company', required: true }, 
+  manager_name: { type: String, required: true },
+  total_projects_handled: { type: Number, default: 0 },  
+  email: { type: String, required: true, unique: true },  
+  password: { type: String, required: true }
 });
-
 
 // Create Mongoose Models
 const Company = mongoose.model('Company', companySchema);
