@@ -57,7 +57,7 @@ function App() {
       <Route path="/bug-details/:id" element={<BugDetails/>} />
       <Route path="/chatroom" element={<Chatroom/>} />
       <Route path="/notifications" element={<Notifications/>} />
-      <Route path="/track-bugs" element={<BugDetailsM/>} />
+      <Route path="/trackbug/:id" element={<BugDetailsM/>} />
       <Route path="/manage-team" element={<ManageTeam/>}/>
       <Route path="/current-projects" element={<CurrProject/>}/>
       <Route path="/trackbugs" element={<TrackBugs/>}/>
