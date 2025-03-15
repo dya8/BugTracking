@@ -14,7 +14,7 @@ export default function Sidebar() {
 
       {/* Menu Items */}
       <nav className="space-y-4 flex-1">
-        <Link to="/dashboard" className="flex items-center space-x-2 px-3 py-2 rounded-md text-white hover:text-white hover:bg-purple-500">
+        <Link to="/admindashboard" className="flex items-center space-x-2 px-3 py-2 rounded-md text-white hover:text-white hover:bg-purple-500">
           <FaTachometerAlt /> {isOpen && <span>Dashboard</span>}
         </Link>
         <Link to="/admin" className="flex items-center space-x-2 px-3 py-2 rounded-md text-white hover:text-white hover:bg-purple-500">

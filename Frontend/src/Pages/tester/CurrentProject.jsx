@@ -1,117 +1,97 @@
 import { useState } from "react";
-import { IoMdClose } from "react-icons/io";
-import Sidebar from "./Sidebar";
-import Navbar from "./Navbar";
+import { FaSearch, FaUsers, FaCalendarAlt, FaExternalLinkAlt } from "react-icons/fa";
+import Navbar from "./navbar";  // Import your Navbar component
+import Sidebar from "./sidebar"; // Import your Sidebar component
 
-export default function CurrentProjects() {
-  const [showModal, setShowModal] = useState(false);
-  const [teamMembers, setTeamMembers] = useState([]);
-  const [email, setEmail] = useState("");
-  const [role, setRole] = useState("");
-  const [projectManager, setProjectManager] = useState("");
-  const [message, setMessage] = useState("");
+const projectsData = [
+  { id: 1, name: "Project One", team: "Team Details", dueDate: "Due date", manager: "Project manager name", pending: 3, completed: 4 },
+  { id: 2, name: "Project Two", team: "Team Details", dueDate: "Due date", manager: "Project manager name", pending: 2, completed: 5 },
+  { id: 3, name: "Project Three", team: "Team Details", dueDate: "Due date", manager: "Project manager name", pending: 5, completed: 3 },
+  { id: 4, name: "Project Four", team: "Team Details", dueDate: "Due date", manager: "Project manager name", pending: 1, completed: 6 },
+  { id: 5, name: "Project Five", team: "Team Details", dueDate: "Due date", manager: "Project manager name", pending: 4, completed: 2 },
+  { id: 6, name: "Project Six", team: "Team Details", dueDate: "Due date", manager: "Project manager name", pending: 0, completed: 8 },
+];
 
-  // Function to add a team member
-  const addTeamMember = () => {
-    if (email && role) {
-      setTeamMembers([...teamMembers, { email, role }]);
-      setEmail("");
-      setRole("");
-    }
-  };
+export default function Projects() {
+  const [search, setSearch] = useState("");
+  const [currentPage, setCurrentPage] = useState(1);
+  const projectsPerPage = 3;
 
-  // Function to reset the form when closing the modal
-  const resetForm = () => {
-    setShowModal(false);
-    setTeamMembers([]);
-    setProjectManager("");
-    setEmail("");
-    setRole("");
-    setMessage("");
-  };
+  // Filter projects based on search input
+  const filteredProjects = projectsData.filter((project) =>
+    project.name.toLowerCase().includes(search.toLowerCase())
+  );
+
+  // Pagination Logic
+  const indexOfLastProject = currentPage * projectsPerPage;
+  const indexOfFirstProject = indexOfLastProject - projectsPerPage;
+  const currentProjects = filteredProjects.slice(indexOfFirstProject, indexOfLastProject);
+  const totalPages = Math.ceil(filteredProjects.length / projectsPerPage);
 
   return (
-    <div className="flex h-screen">
-      <Sidebar />
-      <div className="flex-1 p-6">
-        <Navbar setShowModal={setShowModal} />
-
-        {/* Project Card */}
-        <div className="border space-y-5 text-left pt-4 rounded-lg shadow-md w-64 p-4 mt-4">
-          <h3 className="font-bold">Project One</h3>
-          <p>📋 Team Details</p>
-          <p>📅 Due date</p>
-          <p>Pending bugs: 3</p>
-          <p>Completed bugs: 4</p>
-          <p>Project manager: {projectManager || "Name"}</p>
-        </div>
-
-        {/* Modal */}
-        {showModal && (
-          <div className="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center">
-            <div className="bg-white p-6 rounded-lg w-96 relative">
-              <button className="absolute top-2 right-2" onClick={resetForm}>
-                <IoMdClose size={20} />
-              </button>
-              <h3 className="text-lg font-bold">Add Project</h3>
+    <div className="flex">
+      <Sidebar /> {/* Sidebar Component */}
+      <div className="flex-1">
+        <Navbar /> {/* Navbar Component */}
+        
+        <div className="p-6">
+          {/* Page Heading & Search */}
+          <div className="flex justify-between items-center mb-6">
+            <h1 className="text-2xl font-bold text-purple-700">Current Projects</h1>
+            <div className="relative">
               <input
                 type="text"
-                placeholder="Project Manager Name"
-                value={projectManager}
-                onChange={(e) => setProjectManager(e.target.value)}
-                className="border w-full p-2 mt-2 bg-white rounded-md"
+                placeholder="Search"
+                className="pl-10 pr-4 py-2 border rounded-lg focus:outline-none"
+                value={search}
+                onChange={(e) => setSearch(e.target.value)}
               />
-              <div className="mt-4">
-                <h4 className="font-semibold">Add team members</h4>
-                <div className="flex space-x-2 mt-2 bg-white p-2 rounded-md">
-                  <input
-                    type="email"
-                    value={email}
-                    onChange={(e) => setEmail(e.target.value)}
-                    placeholder="Enter email"
-                    className="border p-2 flex-1 rounded-md"
-                  />
-                  <select
-                    value={role}
-                    onChange={(e) => setRole(e.target.value)}
-                    className="px-2 py-2 border-2 border-purple-500 text-purple-500 bg-transparent rounded-md"
-                  >
-                    <option value="">Select</option>
-                    <option value="Developer">Developer</option>
-                    <option value="Tester">Tester</option>
-                    <option value="Manager">Project Manager</option>
-                  </select>
-                </div>
-                <button
-                  className="mt-2 text-white bg-purple-700 hover:bg-purple-600 p-2 rounded-md"
-                  onClick={addTeamMember}
-                >
-                  Add another
-                </button>
-                <ul className="mt-2">
-                  {teamMembers.map((member, index) => (
-                    <li key={index} className="flex justify-between p-2 border rounded-md mt-1">
-                      {member.email} - {member.role}
-                      <button
-                        className="text-red-500"
-                        onClick={() => setTeamMembers(teamMembers.filter((_, i) => i !== index))}
-                      >
-                        x
-                      </button>
-                    </li>
-                  ))}
-                </ul>
-              </div>
-              <button
-                className="mt-4 bg-purple-600 text-white px-4 py-2 rounded-md w-full"
-                onClick={() => setMessage("Project and team members added successfully!")}
-              >
-                Confirm
-              </button>
-              {message && <p className="text-center text-sm mt-2 text-green-600">{message}</p>} 
+              <FaSearch className="absolute left-3 top-3 text-gray-500" />
             </div>
           </div>
-        )}
+
+          {/* Projects Grid */}
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {currentProjects.map((project) => (
+              <div key={project.id} className="bg-white p-4 rounded-lg shadow-md border">
+                <div className="flex justify-between items-center">
+                  <h2 className="text-lg font-bold text-purple-700">{project.name}</h2>
+                  <a href="#" className="text-purple-500">
+                    <FaExternalLinkAlt />
+                  </a>
+                </div>
+                <p className="flex items-center text-gray-700 mt-2">
+                  <FaUsers className="mr-2 text-purple-500" /> {project.team}
+                </p>
+                <p className="flex items-center text-gray-700 mt-1">
+                  <FaCalendarAlt className="mr-2 text-purple-500" /> {project.dueDate}
+                </p>
+                <p className="text-gray-700 mt-1">{project.manager}</p>
+                <p className="mt-2 text-sm">
+                  <span className="text-yellow-600 font-semibold">Pending bugs:</span> {project.pending}
+                </p>
+                <p className="text-sm">
+                  <span className="text-green-600 font-semibold">Completed bugs:</span> {project.completed}
+                </p>
+              </div>
+            ))}
+          </div>
+
+          {/* Pagination */}
+          <div className="flex justify-center mt-6 space-x-2">
+            {Array.from({ length: totalPages }, (_, i) => (
+              <button
+                key={i}
+                className={`px-3 py-1 border rounded-md ${
+                  currentPage === i + 1 ? "bg-purple-500 text-white" : "text-purple-700"
+                }`}
+                onClick={() => setCurrentPage(i + 1)}
+              >
+                {i + 1}
+              </button>
+            ))}
+          </div>
+        </div>
       </div>
     </div>
   );

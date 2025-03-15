@@ -29,6 +29,17 @@ import ManageTeam from './Pages/manager/ManageTeam';
 import CurrProject from './Pages/manager/Currproject';
 import TrackBugs from './Pages/manager/Trackbugs';
 import ReportedBugs from './Pages/manager/Reportbugs';
+import AssignDue from './Pages/manager/Assigndue';
+import AssignDuePage from './Pages/manager/assignduepage';
+import BugReport from './Pages/tester/reportedbugs';
+import VerifyBugs from './Pages/tester/verifybug';
+import VerifyBugDetails from './Pages/tester/verifybugdetails';
+import Devdashboard from './Pages/developer/devdash';
+import Admindashboard from './Pages/admin/admindash';
+import Managerdashboard from './Pages/manager/managerdash';
+import DevNotifications from './Pages/developer/Devnoti';
+import ManNotifications from './Pages/manager/Manoti';
+import TestNotifications from './Pages/tester/Notitester';
 function App() {
   
   return (
@@ -52,7 +63,7 @@ function App() {
       <Route path="/tester-settings" element={<Tester_Settings/>}/>
       <Route path="/settings" element={<Settings/>} />
       <Route path="/developer" element={<Settings/>} />
-      <Route path="/projects" element={<Projects/>} />
+      <Route path="/project" element={<Projects/>} />
       <Route path="/assigned-bugs" element={<AssignedBugs/>} />
       <Route path="/bug-details/:id" element={<BugDetails/>} />
       <Route path="/chatroom" element={<Chatroom/>} />
@@ -62,6 +73,17 @@ function App() {
       <Route path="/current-projects" element={<CurrProject/>}/>
       <Route path="/trackbugs" element={<TrackBugs/>}/>
       <Route path="/reported-bugs" element={<ReportedBugs/>}/>
+      <Route path="/assign-due" element={<AssignDue/>}/>
+      <Route path="/assign-due/bug/:id" element={<AssignDuePage/>} />
+      <Route path="/reportedbugs" element={<BugReport/>}/>
+      <Route path ="/verify-bugs" element={<VerifyBugs/>}/>
+      <Route path ="/verify-bugs/:bugId" element={<VerifyBugDetails/>}/>
+      <Route path="/devdashboard" element={<Devdashboard/>}/>
+      <Route path="/admindashboard" element={<Admindashboard/>}/>
+      <Route path="/managerdashboard" element={<Managerdashboard/>}/>
+      <Route path="/devnotifications" element={<DevNotifications/>}/>
+      <Route path="/manotifications" element={<ManNotifications/>}/>
+      <Route path="/testnotifications" element={<TestNotifications/>}/>
      </Routes>
        </Router>
   )

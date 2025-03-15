@@ -18,7 +18,7 @@ export default function Sidebar() {
 
       {/* Menu Items */}
       <nav className="space-y-4 flex-1">
-        <SidebarItem to="/dashboard" icon={<FaTachometerAlt size={18} className="text-white" />} label="Dashboard" isOpen={isOpen} />
+        <SidebarItem to="/managerdashboard" icon={<FaTachometerAlt size={18} className="text-white" />} label="Dashboard" isOpen={isOpen} />
         <SidebarItem to="/manage-team" icon={<FaUsers size={18} className="text-white" />} label="Manage Team" isOpen={isOpen} />
         <SidebarItem to="/current-projects" icon={<FaFolderOpen size={18} className="text-white" />} label="Current Projects" isOpen={isOpen} />
         <SidebarItem to="/trackbugs" icon={<FaBug size={18} className="text-white" />} label="Track Bugs" isOpen={isOpen} />

@@ -29,7 +29,7 @@ export default function Sidebar() {
         <Link to="/verify-bugs" className="flex items-center space-x-2 px-3 py-2 rounded-md text-white hover:text-white hover:bg-purple-500">
           <FaCheckCircle /> {isOpen && <span>Verify Bugs</span>}
         </Link>
-        <Link to="/reported-bugs" className="flex items-center space-x-2 px-3 py-2 rounded-md text-white hover:text-white hover:bg-purple-500">
+        <Link to="/reportedbugs" className="flex items-center space-x-2 px-3 py-2 rounded-md text-white hover:text-white hover:bg-purple-500">
           <FaClipboardList /> {isOpen && <span>Reported Bugs</span>}
         </Link>
         <Link to="/chat-room" className="flex items-center space-x-2 px-3 py-2 rounded-md text-white hover:text-white hover:bg-purple-500">

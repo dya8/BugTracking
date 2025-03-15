@@ -15,11 +15,11 @@ export default function Sidebar() {
 
       {/* Menu Items */}
       <nav className="space-y-4 flex-1">
-        <Link to="/dashboard" className="flex items-center space-x-3 px-3 py-3 rounded-md hover:bg-purple-600 transition">
+        <Link to="/devdashboard" className="flex items-center space-x-3 px-3 py-3 rounded-md hover:bg-purple-600 transition">
           <FaChartBar size={18} className="text-white" />
           {isOpen && <span className="text-white">Dashboard</span>}
         </Link>
-        <Link to="/projects" className="flex items-center space-x-3 px-3 py-3 rounded-md hover:bg-purple-600 transition">
+        <Link to="/project" className="flex items-center space-x-3 px-3 py-3 rounded-md hover:bg-purple-600 transition">
           <FaFileAlt size={18} className="text-white" />
           {isOpen && <span className="text-white">Projects</span>}
         </Link>
