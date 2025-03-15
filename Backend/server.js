@@ -275,7 +275,7 @@ router.post("/api/auth/login", async (req, res) => {
       const { email, password } = req.body;
   
       // Check if user exists
-      let user = await User.findOne({ email });
+      let user = await user.findOne({ email });
       if (!user) return res.status(400).json({ message: "Invalid Email or Password" });
   
       // Check Password
