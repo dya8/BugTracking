@@ -25,92 +25,115 @@ const idCounterSchema = new mongoose.Schema({
 });
 const IdCounter = mongoose.model("IdCounter", idCounterSchema);
 
-const generateUniqueId = async (modelName) => {
-    let counter = await IdCounter.findOneAndUpdate(
-        { model: modelName },
-        { $inc: { lastId: 1 } },
+
+// Unique ID Generator Function
+const generateUniqueId = async (entity) => {
+    const counter = await IdCounter.findOneAndUpdate(
+        { entity }, 
+        { $inc: { count: 1 } }, 
         { new: true, upsert: true }
     );
-    return counter.lastId.toString().padStart(8, '0');
+    return counter.count;
 };
 
-// Define Schemas
+// Define Mongoose Schemas
 const companySchema = new mongoose.Schema({
-    company_id: { type: String, unique: true },
-    company_name: String,
-    email: String
+    company_id: { type: Number, required: true, unique: true },
+    company_name:{ type: String,required: true},
+    email: {type: String, required: true, unique: true}
 });
 
 const adminSchema = new mongoose.Schema({
-    admin_id: { type: String, unique: true },
+    admin_id: { type: Number, required: true, unique: true },
     admin_name: String,
-    email: String,
-    password: String,
-    company_id: String
+    company_id: { type: mongoose.Schema.Types.ObjectId, ref: 'Company' },
+    email: { type: String, required: true },
+    password: String
 });
 
 const projectSchema = new mongoose.Schema({
-    project_id: { type: String, unique: true },
-    project_name: String,
-    company_id: String,
-    git_id: String,
-});
-
+  project_id: { type: Number, required: true, unique: true },
+  project_name: { type: String, required: true },
+  company_id: { type: mongoose.Schema.Types.ObjectId, ref: 'Company', required: true },  // Reference to Company
+  git_id: { type: String, unique: true },  // Ensure git_id is unique
+}, { timestamps: true });
 
 const developerSchema = new mongoose.Schema({
-    developer_id: { type: String, unique: true },
-    developer_name: String,
-    email: String,
-    password: String,
-    company_id: String
+  developer_id: { type: Number, required: true, unique: true },
+  project_id: { type: mongoose.Schema.Types.ObjectId, ref: 'Project', required: true }, 
+  company_id: { type: mongoose.Schema.Types.ObjectId, ref: 'Company', required: true }, 
+  developer_name: { type: String, required: true },  
+  email: { type: String, required: true, unique: true },  
+  password: { type: String, required: true },
+  total_bugs_solved: { type: Number, default: 0 },  
+  success_rate: { type: Number, default: 0 }, 
+  solved_bugs: [{ 
+      bug_id: { type: mongoose.Schema.Types.ObjectId, ref: 'Bug' },  
+      bug_type: String,
+      resolution_time: Number 
+  }]
 });
 
 const testerSchema = new mongoose.Schema({
-    tester_id: { type: String, unique: true },
-    tester_name: String,
-    email: String,
-    password: String,
-    company_id: String
+  tester_id: { type: Number, required: true, unique: true },
+  project_id: { type: mongoose.Schema.Types.ObjectId, ref: 'Project', required: true }, 
+  company_id: { type: mongoose.Schema.Types.ObjectId, ref: 'Company', required: true }, 
+  tester_name: { type: String, required: true },
+  total_bug_reported: { type: Number, default: 0 },  
+  email: { type: String, required: true, unique: true },  
+  password: { type: String, required: true },  
+  bugs_reported: [{ type: mongoose.Schema.Types.ObjectId, ref: 'Bug' }],  
+  bugs_verified: [{ type: mongoose.Schema.Types.ObjectId, ref: 'Bug' }]   
 });
+
 const bugSchema = new mongoose.Schema({
-    bug_id: { type: Number, required: true, unique: true },
-    bug_name: String,
-    bug_status: { type: String, enum: ["Open", "In Progress", "Resolved", "Verified", "Reopen"] },
-    bug_type: String,  
-    priority: { type: String, enum: ["Low", "Medium", "High", "Critical"] },
-    reported_by: { type: mongoose.Schema.Types.ObjectId, ref: 'Tester' },
-    assigned_to: { type: mongoose.Schema.Types.ObjectId, ref: 'Developer' },
-    created_at: { type: Date, default: Date.now },
-    resolved_at: { type: Date },
-    resolution_time: {
-        type: String, 
-        default: function() {
-            if (this.resolved_at) {
-                const diff = this.resolved_at - this.created_at;
-                const hours = Math.floor(diff / (1000 * 60 * 60));
-                const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
-                const seconds = Math.floor((diff % (1000 * 60)) / 1000);
-                return `${String(hours).padStart(2, '0')}:${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`;
-            }
-            return null;
-        }
-    }
+  bug_id: { type: Number, required: true, unique: true },
+  project_id: { type: mongoose.Schema.Types.ObjectId, ref: 'Project', required: true },  
+  bug_name: { type: String, required: true },  
+  bug_status: { 
+      type: String, 
+      enum: ["Open", "In Progress", "Resolved", "Verified", "Reopen"], 
+      default: "Open" 
+  },
+  bug_type: { type: String, required: true }, 
+  priority: { 
+      type: String, 
+      enum: ["Low", "Medium", "High", "Critical"], 
+      default: "Medium"  
+  },
+  reported_by: { type: mongoose.Schema.Types.ObjectId, ref: 'Tester', required: true }, 
+  assigned_to: { type: mongoose.Schema.Types.ObjectId, ref: 'Developer' },  
+  assigned_at: { type: Date }, 
+  created_at: { type: Date, default: Date.now },
+  resolved_at: { type: Date },
+  resolution_time: { 
+      type: Number,
+      default: function() {
+          return this.resolved_at ? (this.resolved_at - this.created_at) / (1000 * 60 * 60) : null;  
+      }
+  }
 });
 
 const chatroomSchema = new mongoose.Schema({
-    chatroom_id: { type: Number, required: true, unique: true },
-    bug_id: { type: mongoose.Schema.Types.ObjectId, ref: 'Bug' },
-    project_id: { type: mongoose.Schema.Types.ObjectId, ref: 'Project' },
-    created_at: { type: Date, default: Date.now }
+  bug_id: { type: mongoose.Schema.Types.ObjectId, ref: 'Bug', required: true }, 
+  project_id: { type: mongoose.Schema.Types.ObjectId, ref: 'Project', required: true }, 
+  created_at: { type: Date, default: Date.now }, 
+  messages: [{
+      sender_id: { type: mongoose.Schema.Types.ObjectId, required: true, refPath: 'sender_type' },
+      sender_type: { type: String, enum: ["Developer", "Tester"], required: true }, 
+      message: { type: String, required: true }, 
+      timestamp: { type: Date, default: Date.now } 
+  }]
 });
 
 const projectManagerSchema = new mongoose.Schema({
-    project_id: { type: String, ref: "Project" },
-    manager_name: String,
-    email: String,
-    total_projects_handled: Number,
+  project_id: [{ type: mongoose.Schema.Types.ObjectId, ref: 'Project' }],  
+  company_id: { type: mongoose.Schema.Types.ObjectId, ref: 'Company', required: true }, 
+  manager_name: { type: String, required: true },
+  total_projects_handled: { type: Number, default: 0 },  
+  email: { type: String, required: true, unique: true },  
+  password: { type: String, required: true }
 });
-
 
 // Create Mongoose Models
 const Company = mongoose.model('Company', companySchema);
@@ -121,6 +144,8 @@ const Tester = mongoose.model('Tester', testerSchema);
 const Bug = mongoose.model('Bug', bugSchema);
 const Chatroom = mongoose.model('Chatroom', chatroomSchema);
 const ProjectManager = mongoose.model('ProjectManager', projectManagerSchema);
+
+
 
 // JWT Token Function
 const generateToken = (id) => {
@@ -155,17 +180,32 @@ app.post("/api/company-signup", async (req, res) => {
 app.post("/api/admin-signup", async (req, res) => {
     try {
         const { admin_name, email, password, company_id } = req.body;
+
+        
+
+        // Generate a unique admin ID
         const admin_id = await generateUniqueId("Admin");
 
-        const hashedPassword = await bcrypt.hash(password, 10);
-        const admin = new Admin({ admin_id, admin_name, email, password: hashedPassword, company_id });
+        
+
+        // Create and save the new admin
+        const admin = new Admin({
+            admin_id,
+            admin_name,
+            email,
+            password,
+            company_id: company._id // Store as ObjectId
+        });
+
         await admin.save();
 
         res.status(201).json({ message: "Admin Registered Successfully", admin_id });
     } catch (error) {
+        console.error("Admin Signup Error:", error);
         res.status(400).json({ error: error.message });
     }
 });
+
 
 // ✅ Project Signup API 
 app.post("/api/project-signup", async (req, res) => {
