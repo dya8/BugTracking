@@ -1,4 +1,3 @@
-
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
 
@@ -6,19 +5,50 @@ const SignupPage = () => {
   const navigate = useNavigate();
 
   const [formData, setFormData] = useState({
+    companyName: "", // Fetch company_id from this
     adminName: "",
     email: "",
     password: "",
     confirmPassword: "",
   });
 
+  const [companyId, setCompanyId] = useState(""); // Store fetched company_id
   const [error, setError] = useState("");
 
   const handleChange = (e) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
   };
 
+  // Fetch company_id using companyName
+  const fetchCompanyId = async () => {
+    if (!formData.companyName.trim()) return;
+
+    try {
+      const response = await fetch("http://localhost:5000/api/get-company-details", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ companyName: formData.companyName }),
+      });
+
+      const data = await response.json();
+      if (response.ok) {
+        setCompanyId(data.company_id);
+        setError(""); // Clear previous error
+      } else {
+        setCompanyId("");
+        setError(data.message || "Company not found.");
+      }
+    } catch (error) {
+      setError("Error fetching company ID.");
+    }
+  };
+
   const handleSubmit = async () => {
+    if (!companyId) {
+      setError("Company must be registered first.");
+      return;
+    }
+
     if (formData.password !== formData.confirmPassword) {
       setError("Passwords do not match!");
       return;
@@ -27,11 +57,10 @@ const SignupPage = () => {
     try {
       const response = await fetch("http://localhost:5000/api/admin-signup", {
         method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          name: formData.adminName,
+          company_name: formData.companyName, // ✅ Send company_name instead of company_id
+          admin_name: formData.adminName,
           email: formData.email,
           password: formData.password,
         }),
@@ -58,6 +87,15 @@ const SignupPage = () => {
           Create your <br /> company account
         </h2>
         <div className="mt-6 w-80 space-y-4 text-purple-500">
+          <input
+            type="text"
+            name="companyName"
+            placeholder="Company Name"
+            className="w-full p-3 rounded-md bg-purple-100 text-purple-500 focus:outline-none"
+            value={formData.companyName}
+            onChange={handleChange}
+            onBlur={fetchCompanyId} // Fetch company ID when field loses focus
+          />
           <input
             type="text"
             name="adminName"
@@ -99,6 +137,7 @@ const SignupPage = () => {
           <button
             className="w-full p-3 bg-purple-700 text-white rounded-md mt-4"
             onClick={handleSubmit}
+            disabled={!companyId}
           >
             Continue
           </button>

@@ -1,10 +1,11 @@
+// Exporting Mongoose Models and Connect to MongoDB
 const mongoose = require("mongoose");
+
 
 const connectDB = async () => {
     try {
-        await mongoose.connect("mongodb://127.0.0.1:27017/bug_tracking", {
-            useNewUrlParser: true,
-            useUnifiedTopology: true
+        await mongoose.connect("mongodb+srv://diyadileep0806:zsAKnoxDYhyqi0mX@bugtracking.mgjl7.mongodb.net/mydb?retryWrites=true&w=majority", {
+         
         });
         console.log("MongoDB Connected!");
     } catch (error) {
