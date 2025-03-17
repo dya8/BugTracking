@@ -92,7 +92,8 @@ import axios from "axios";
 const TeamSignupPage = () => {
   const navigate = useNavigate();
 
-  const [companyId, setCompanyId] = useState(""); // Input for company ID
+  const [companyName, setCompanyName] = useState(""); // Input for company ID /*change comapny id to name*/
+  const [projectName, setProjectName] = useState(""); // Input for project name
   const [collaborators, setCollaborators] = useState([{ email: "", role: "" }]);
   const [error, setError] = useState("");
   const [successMessage, setSuccessMessage] = useState("");
@@ -103,24 +104,27 @@ const TeamSignupPage = () => {
     setCollaborators(updatedCollaborators);
   };
 
-  const handleCompanyIdChange = (e) => {
-    setCompanyId(e.target.value);
+  const handleCompanyNameChange = (e) => {
+    setCompanyName(e.target.value);
   };
-
+  const handleProjectNameChange = (e) => {
+    setProjectName(e.target.value);
+  };
   const addCollaborator = () => {
     setCollaborators([...collaborators, { email: "", role: "" }]);
   };
 
   const handleSubmit = async () => {
-    if (!companyId) {
-      setError("Company ID is required!");
+    if (!companyName) {
+      setError("Company Name is required!");
       return;
     }
 
     try {
       const response = await axios.post("http://localhost:5000/api/team-signup", {
         collaborators,
-        company_id: companyId, // Sending company_id to backend
+        company_name: companyName, // Sending company_id to backend
+        project_name: projectName, // Sending project_name to backend
       });
 
       setSuccessMessage(response.data.message);
@@ -142,10 +146,17 @@ const TeamSignupPage = () => {
         <div className="mt-6 w-80 space-y-4">
           <input
             type="integer"
-            placeholder="Enter Company ID"
+            placeholder="Enter Company Name"
             className="w-full p-3 rounded-md bg-purple-100 text-purple-500 focus:outline-none"
-            value={companyId}
-            onChange={handleCompanyIdChange}
+            value={companyName}
+            onChange={handleCompanyNameChange}
+          />
+            <input
+            type="text"
+            placeholder="Enter Project Name"
+            className="w-full p-3 rounded-md bg-purple-100 text-purple-500 focus:outline-none"
+            value={projectName}
+            onChange={handleProjectNameChange}
           />
 
           {collaborators.map((collab, index) => (
@@ -167,7 +178,7 @@ const TeamSignupPage = () => {
                 <option value="">Select Role</option>
                 <option value="Tester">Tester</option>
                 <option value="Developer">Developer</option>
-                <option value="Project Manager">Project Manager</option>
+              
               </select>
             </div>
           ))}

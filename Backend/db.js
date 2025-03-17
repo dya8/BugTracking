@@ -24,7 +24,7 @@ const companySchema = new mongoose.Schema({
 const adminSchema = new mongoose.Schema({
     admin_id: { type: Number, required: true, unique: true },
     admin_name: { type: String, required: true },
-    company_id: { type: mongoose.Schema.Types.ObjectId, ref: 'Company', required: true },
+    company_id: { type: Number, ref: 'Company', required: true },
     email: { type: String, required: true, unique: true },
     password: { type: String, required: true }
 });
@@ -32,14 +32,14 @@ const adminSchema = new mongoose.Schema({
 const projectSchema = new mongoose.Schema({
     project_id: { type: Number, required: true, unique: true },
     project_name: { type: String, required: true },
-    company_id: { type: mongoose.Schema.Types.ObjectId, ref: 'Company', required: true },
+    company_id: { type: Number, ref: 'Company', required: true },
     git_id: { type: String, unique: true }
 }, { timestamps: true });
 
 const developerSchema = new mongoose.Schema({
     developer_id: { type: Number, required: true, unique: true },
-    project_id: { type: mongoose.Schema.Types.ObjectId, ref: 'Project', required: true },
-    company_id: { type: mongoose.Schema.Types.ObjectId, ref: 'Company', required: true },
+    project_id: { type: Number, ref: 'Project', required: true },
+    company_id: { type: Number, ref: 'Company', required: true },
     developer_name: { type: String, required: true },
     email: { type: String, required: true, unique: true },
     password: { type: String, required: true },
@@ -54,19 +54,19 @@ const developerSchema = new mongoose.Schema({
 
 const testerSchema = new mongoose.Schema({
     tester_id: { type: Number, required: true, unique: true },
-    project_id: { type: mongoose.Schema.Types.ObjectId, ref: 'Project', required: true },
-    company_id: { type: mongoose.Schema.Types.ObjectId, ref: 'Company', required: true },
+    project_id: { type: Number, ref: 'Project', required: true },
+    company_id: { type: Number, ref: 'Company', required: true },
     tester_name: { type: String, required: true },
     total_bug_reported: { type: Number, default: 0 },
     email: { type: String, required: true, unique: true },
     password: { type: String, required: true },
-    bugs_reported: [{ type: mongoose.Schema.Types.ObjectId, ref: 'Bug' }],
-    bugs_verified: [{ type: mongoose.Schema.Types.ObjectId, ref: 'Bug' }]
+    bugs_reported: [{ type: Number, ref: 'Bug' }],
+    bugs_verified: [{ type: Number, ref: 'Bug' }]
 });
 
 const bugSchema = new mongoose.Schema({
     bug_id: { type: Number, required: true, unique: true },
-    project_id: { type: mongoose.Schema.Types.ObjectId, ref: 'Project', required: true },
+    project_id: { type: Number, ref: 'Project', required: true },
     bug_name: { type: String, required: true },
     bug_status: {
         type: String,
@@ -79,8 +79,8 @@ const bugSchema = new mongoose.Schema({
         enum: ["Low", "Medium", "High", "Critical"],
         default: "Medium"
     },
-    reported_by: { type: mongoose.Schema.Types.ObjectId, ref: 'Tester', required: true },
-    assigned_to: { type: mongoose.Schema.Types.ObjectId, ref: 'Developer' },
+    reported_by: { type: Number, ref: 'Tester', required: true },
+    assigned_to: { type: Number, ref: 'Developer' },
     assigned_at: { type: Date },
     created_at: { type: Date, default: Date.now },
     resolved_at: { type: Date },
@@ -96,7 +96,7 @@ bugSchema.pre('save', function (next) {
 });
 
 const chatroomSchema = new mongoose.Schema({
-    bug_id: { type: mongoose.Schema.Types.ObjectId, ref: 'Bug', required: true },
+    bug_id: { type: Number, ref: 'Bug', required: true },
     project_id: { type: mongoose.Schema.Types.ObjectId, ref: 'Project', required: true },
     created_at: { type: Date, default: Date.now },
     messages: [{
@@ -108,8 +108,8 @@ const chatroomSchema = new mongoose.Schema({
 });
 
 const projectManagerSchema = new mongoose.Schema({
-    project_id: [{ type: mongoose.Schema.Types.ObjectId, ref: 'Project' }],
-    company_id: { type: mongoose.Schema.Types.ObjectId, ref: 'Company', required: true },
+    project_id: [{ type: Number, ref: 'Project' }],
+    company_id: { type: Number, ref: 'Company', required: true },
     manager_name: { type: String, required: true },
     total_projects_handled: { type: Number, default: 0 },
     email: { type: String, required: true, unique: true },

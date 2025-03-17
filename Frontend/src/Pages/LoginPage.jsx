@@ -13,6 +13,30 @@ const LoginPage = () => {
   const handleChange = (e) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
   };
+  // Handle login submission
+  const handleLogin = async () => {
+    setError(""); // Clear previous errors
+
+    if (!formData.email || !formData.password) {
+      setError("Both email and password are required!");
+      return;
+    }
+
+    try {
+      const response = await axios.post("http://localhost:5000/api/login", formData);
+      const { role } = response.data;
+
+      // Redirect based on role
+      if (role === "Admin") navigate("/admindashboard");
+      else if (role === "Developer") navigate("/devdashboard");
+      else if (role === "Tester") navigate("/dashboard");
+      else if (role === "Project Manager") navigate("/managerdashboard");
+
+    } catch (err) {
+      setError(err.response?.data?.error || "Invalid email or password!");
+    }
+  };
+
 
   return (
     <div className="flex h-screen w-full">
@@ -45,7 +69,7 @@ const LoginPage = () => {
             </span>
           </div>
           <p className="text-right text-sm text-blue-600 cursor-pointer">Forgot password?</p>
-          <button className="w-full p-3 bg-purple-700 text-white rounded-md mt-4">Sign In</button>
+          <button className="w-full p-3 bg-purple-700 text-white rounded-md mt-4">Sign In</button> {/* Add onClick Event */}
         </div>
 
         {/* Redirect to Signup Page */}
