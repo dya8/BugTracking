@@ -46,7 +46,7 @@ const developerSchema = new mongoose.Schema({
     total_bugs_solved: { type: Number, default: 0 },
     success_rate: { type: Number, default: 0 },
     solved_bugs: [{
-        bug_id: { type: mongoose.Schema.Types.ObjectId, ref: 'Bug' },
+        bug_id: { type: Number, ref: 'Bug' },
         bug_type: { type: String },
         resolution_time: { type: Number }
     }]
@@ -96,11 +96,12 @@ bugSchema.pre('save', function (next) {
 });
 
 const chatroomSchema = new mongoose.Schema({
-    bug_id: { type: Number, ref: 'Bug', required: true },
-    project_id: { type: mongoose.Schema.Types.ObjectId, ref: 'Project', required: true },
+    chatroom_id: { type: Number, required: true, unique: true },
     created_at: { type: Date, default: Date.now },
+    developer_id: { type: Number, ref: 'Developer', required: true },  
+    tester_id: { type: Number, ref: 'Tester', required: true },
     messages: [{
-        sender_id: { type: mongoose.Schema.Types.ObjectId, required: true, refPath: 'sender_type' },
+        sender_id: { type: Number, required: true, refPath: 'sender_type' },
         sender_type: { type: String, enum: ["Developer", "Tester"], required: true },
         message: { type: String, required: true },
         timestamp: { type: Date, default: Date.now }

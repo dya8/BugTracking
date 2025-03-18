@@ -16,7 +16,7 @@ import Setting from './Pages/admin/Setting';
 import Chatroom from './Pages/developer/Chatroom';
 import ReportBug from './Pages/tester/ReportBug';
 import Dashboard from './Pages/tester/Dashboard';
-import ChatRoom from './Pages/tester/ChatRoom';
+import ChatroomTester from './Pages/tester/ChatRoom';
 import CurrentProjects from './Pages/tester/CurrentProject';
 import Tester_Settings from './Pages/tester/Settings';
 import Notifications from './Pages/admin/Noti';
@@ -58,7 +58,7 @@ function App() {
       <Route path="/setting" element={<Setting/>} />
       <Route path="/report-bug" element={<ReportBug/>} />
       <Route path="/dashboard" element={<Dashboard/>} />
-      <Route path="/chat-room" element={<ChatRoom/>} />
+      <Route path="/chat-room" element={<ChatroomTester/>} />
       <Route path="/projects" element={<CurrentProjects/>} />
       <Route path="/tester-settings" element={<Tester_Settings/>}/>
       <Route path="/settings" element={<Settings/>} />
