@@ -40,42 +40,7 @@ function setupChatSocket(server) {
             }
         });        
 
-        // When a message is sent
-        /*socket.on("sendMessage", async ({ chatroom_id, sender_id, sender_type, message }) => {
-            if (!chatroom_id || !sender_id || !sender_type || !message) {
-                socket.emit("error", { message: "Missing required fields" });
-                return;
-            }
-
-            try {
-                const chatroom = await Chatroom.findById(chatroom_id);
-                if (!chatroom) {
-                    socket.emit("error", { message: "Chatroom not found" });
-                    return;
-                }
-
-                // Create new message object
-                const newMessage = {
-                    sender_id,
-                    sender_type,
-                    message,
-                    timestamp: new Date()
-                };
-
-                // Save message to DB
-                chatroom.messages.push(newMessage);
-                await chatroom.save();
-
-                // Emit message to all users in the chatroom
-                io.to(chatroom_id).emit("receiveMessage", newMessage);
-
-                // Acknowledge message sent to sender
-                socket.emit("messageSent", { success: true });
-            } catch (err) {
-                console.error("Error sending message:", err);
-                socket.emit("error", { message: "Internal server error" });
-            }
-        });*/
+       //when a msg is sent
         socket.on("sendMessage", async (messageData) => {
             console.log("📥 Backend received message:", messageData);
           
@@ -106,13 +71,25 @@ function setupChatSocket(server) {
               io.to(messageData.chatroom_id).emit("receiveMessage", newMessage);
                // ✅ Also send an API response for confirmation (optional)
             socket.emit("messageSaved", { success: true, message: newMessage });
-
+            //toast noti
+            // ✅ Emit a confirmation event for tester
+            io.to(messageData.chatroom_id).emit("messageSent", {
+                message: messageData.message,
+                sender: messageData.sender_type,
+            });
+            //for devnoti.jsx
+           /* io.emit("chatNotification", {
+                chatroom_id: messageData.chatroom_id,
+                message: `New message from ${messageData.sender_type === 'Tester' ? 'Tester' : 'Developer'}!`,
+                time: new Date().toLocaleTimeString(),
+              });
+            console.log("🔔 Emitting Notification:", notification);
+            io.emit("chatNotification", notification);*/
             } catch (error) {
               console.error("❌ Error storing message:", error);
               socket.emit("messageError", { success: false, error: error.message });
             }
           });
-          
 
         // Handle user disconnection
         socket.on("disconnect", () => {

@@ -50,11 +50,11 @@ async function handleSelectTester(tester) {
 
     // API call to fetch or create a chatroom
     const response = await axios.post(
-      "http://localhost:3000/api/chat/chatroom", // Replace with actual endpoint
+      "http://localhost:3000/api/chat/chatroom", 
       requestData,
       {
         headers: {
-          "Content-Type": "application/json", // Ensure JSON request
+          "Content-Type": "application/json", 
         },
       }
     );
@@ -102,17 +102,22 @@ async function handleSelectTester(tester) {
 
   
 
-  // Listen for incoming messages
-  useEffect(() => {
-    socket.on("receiveMessage", (newMsg) => {
-      console.log("📥 New message received in frontend:", newMsg);
+
+useEffect(() => {
+  socket.on("receiveMessage", (newMsg) => {
+    console.log("📥 New message received in frontend:", newMsg);
+
+    // Check if the message belongs to the currently selected chatroom
+    if (selectedTester && newMsg.chatroom_id === selectedTester.chatroom_id) {
       setMessages((prevMessages) => [...prevMessages, newMsg]);
-    });
-  
-    return () => {
-      socket.off("receiveMessage");
-    };
-  }, []);
+    }
+  });
+
+  return () => {
+    socket.off("receiveMessage");
+  };
+}, [selectedTester]); // Depend on selectedTester to ensure it updates correctly
+
   
 
   // Send a message
@@ -151,7 +156,7 @@ async function handleSelectTester(tester) {
       // Emit the message to other clients
       socket.emit("sendMessage", response.data);
 
-      // 🔥 Immediately update the chat UI
+      //  Immediately update the chat UI
       setMessages((prevMessages) => [...prevMessages, response.data]);
       setNewMessage("");
   } catch (error) {
@@ -165,7 +170,7 @@ async function handleSelectTester(tester) {
       <Sidebar />
       <div className="flex-1 flex flex-col">
         <Navbar />
-        <div className="flex h-full">
+        <div className="flex h-[calc(110vh-150px)]">
           {/* Tester List */}
           <div className="w-1/4 bg-white border-r p-4">
             <h2 className="text-purple-700 text-xl font-semibold">Testers</h2>
@@ -175,14 +180,15 @@ async function handleSelectTester(tester) {
                 className={`p-3 mt-2 rounded-lg cursor-pointer font-semibold text-purple-700 border ${
                   selectedTester?.tester_id === tester.tester_id ? "bg-purple-200" : "hover:bg-purple-100"
                 }`}
-                onClick={() => {console.log("🟡 Clicked tester:", tester);
-                  handleSelectTester(tester);}}
+                onClick={() => {
+                  handleSelectTester(tester);
+                }}
               >
                 {tester.tester_name} ({tester.project_name})
               </div>
             ))}
           </div>
-
+  
           {/* Chat Window */}
           <div className="flex-1 flex flex-col">
             {selectedTester ? (
@@ -190,13 +196,26 @@ async function handleSelectTester(tester) {
                 <div className="bg-gray-200 p-4 font-semibold text-purple-700 text-lg border-b">
                   Chat with {selectedTester.tester_name} ({selectedTester.project_name})
                 </div>
-                <div className="flex-1 p-4 overflow-y-auto">
+                <div className="flex-1 p-4 overflow-y-auto flex flex-col">
                   {messages.map((msg, index) => (
-                    <div key={index} className={`mb-2 p-2 rounded-lg ${
-                      msg.sender_type === "Developer" ? "bg-purple-700 text-white self-end" : "bg-gray-300 text-gray-800 self-start"
-                    } max-w-xs`}
+                    <div
+                      key={index}
+                      className={`flex mb-2 ${
+                        msg.sender_type === "Developer" ? "justify-end" : "justify-start"
+                      }`}
                     >
-                      {msg.message}
+                      <div
+                        className={`p-2 rounded-lg max-w-xs ${
+                          msg.sender_type === "Developer"
+                            ? "bg-purple-700 text-white"
+                            : "bg-purple-200 text-gray-900"
+                        }`}
+                      >
+                        <div className="text-sm">{msg.message}</div>
+                        <div className="text-xs text-white-400 text-right mt-1">
+                          {new Date(msg.timestamp).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit", hour12: true })}
+                        </div>
+                      </div>
                     </div>
                   ))}
                 </div>
@@ -211,7 +230,7 @@ async function handleSelectTester(tester) {
                   <button
                     className="ml-2 px-4 py-2 bg-purple-700 text-white rounded-lg"
                     onClick={() => {
-                      console.log("Send button clicked"); // Debugging log
+                      console.log("Send button clicked");
                       sendMessage();
                     }}
                   >
@@ -229,6 +248,7 @@ async function handleSelectTester(tester) {
       </div>
     </div>
   );
+  
 };
 
 export default Chatroom;

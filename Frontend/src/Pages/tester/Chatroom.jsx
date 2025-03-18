@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
 import io from "socket.io-client";
 import axios from "axios";
-import { Card, CardContent, TextField, Button } from "@mui/material";
+import { format } from "date-fns"; // Import for formatting timestamps
 import Sidebar from "./Sidebar";
 import Navbar from "./Navbar";
 
@@ -12,6 +12,7 @@ const ChatroomTester = () => {
   const [selectedDeveloper, setSelectedDeveloper] = useState(null);
   const [messages, setMessages] = useState([]);
   const [newMessage, setNewMessage] = useState("");
+  const [unreadMessages, setUnreadMessages] = useState({}); // Store unread count per developer
   const tester_id = 1; // Replace with actual logged-in tester ID
 
   // Fetch developers assigned to this tester
@@ -19,94 +20,26 @@ const ChatroomTester = () => {
     const fetchDevelopers = async () => {
       try {
         const response = await axios.get(`http://localhost:3000/api/chat/developers/${tester_id}`);
-        setDevelopers(response.data); // Expecting testers list from backend
-        console.log(response.data);
+        setDevelopers(response.data);
       } catch (error) {
-        console.error("Error fetching testers:", error);
+        console.error("Error fetching developers:", error);
       }
     };
     fetchDevelopers();
   }, []);
 
-  // 📌 Handle selecting a developer and joining the chatroom
-const handleSelectDeveloper = async (developer) => {
-  try {
-    // Validate developer object
-    if (!developer || !developer.developer_id) {
-      throw new Error("Invalid developer data provided.");
+  // Fetch messages when a developer is selected
+  useEffect(() => {
+    if (selectedDeveloper) {
+      fetchMessages(selectedDeveloper.chatroom_id);
+      setUnreadMessages((prev) => ({ ...prev, [selectedDeveloper.developer_id]: 0 })); // Reset unread count
     }
+  }, [selectedDeveloper]);
 
-    console.log("Selecting developer:", developer);
-
-    // Request data for chatroom creation/fetch
-    const requestData = {
-      developer_id: developer.developer_id,
-      tester_id, // Ensure tester_id is defined in the scope
-    };
-    console.log("📤 Sending request data:", requestData);
-
-    // Ensure request data is valid
-    if (typeof requestData !== "object" || requestData === null) {
-      throw new Error("Invalid request data: must be a valid object.");
-    }
-
-    // API call to fetch or create a chatroom
-    const response = await axios.post(
-      "http://localhost:3000/api/chat/chatroom", // Ensure endpoint matches backend
-      requestData,
-      {
-        headers: {
-          "Content-Type": "application/json",
-        },
-      }
-    );
-
-    console.log("✅ Chatroom response:", response.data);
-
-    // Validate response
-    const chatroom = response.data;
-    if (!chatroom || !chatroom.chatroom_id) {
-      throw new Error("Chatroom ID is missing in response!");
-    }
-
-    console.log("✅ Chatroom ID:", chatroom.chatroom_id);
-
-    // Update state AFTER chatroom ID is available
-    setSelectedDeveloper({ ...developer, chatroom_id: chatroom.chatroom_id });
-
-    // Join chatroom
-    socket.emit("joinChatroom", { chatroom_id: chatroom.chatroom_id });
-
-    // Fetch chat history
-    const messagesResponse = await axios.get(
-      `http://localhost:3000/api/chat/messages/${chatroom.chatroom_id}`
-    );
-
-    console.log("✅ Fetched messages:", messagesResponse.data);
-
-    setMessages(messagesResponse.data);
-  } catch (error) {
-    // Logging detailed error information
-    console.error("❌ Error handling chatroom:", error);
-
-    if (error.response) {
-      console.error("🔍 Error response data:", error.response.data);
-      console.error("🔍 Error response status:", error.response.status);
-      console.error("🔍 Error response headers:", error.response.headers);
-    } else if (error.request) {
-      console.error("🔍 No response received:", error.request);
-    } else {
-      console.error("🔍 Error in request setup:", error.message);
-    }
-  }
-};
-  // without clicking on tester display msg
-
-  // Fetch messages for a given chatroom
   const fetchMessages = async (chatroom_id) => {
     try {
-      const res = await axios.get(`http://localhost:3000/api/chatroom/${chatroom_id}`);
-      setMessages(res.data.messages);
+      const res = await axios.get(`http://localhost:3000/api/chat/messages/${chatroom_id}`);
+      setMessages(res.data);
     } catch (err) {
       console.error("Error fetching messages:", err);
     }
@@ -115,13 +48,37 @@ const handleSelectDeveloper = async (developer) => {
   // Listen for incoming messages
   useEffect(() => {
     socket.on("receiveMessage", (message) => {
-      console.log("📥 New message received in frontend:", newMsg);
       setMessages((prev) => [...prev, message]);
-    });
-    return () => socket.off("receiveMessage");
-  }, []);
 
-  // Send a new message
+      // If the message is from a different developer, update unread count
+      if (!selectedDeveloper || message.sender_id !== selectedDeveloper.developer_id) {
+        setUnreadMessages((prev) => ({
+          ...prev,
+          [message.sender_id]: (prev[message.sender_id] || 0) + 1,
+        }));
+      }
+    });
+
+    return () => socket.off("receiveMessage");
+  }, [selectedDeveloper]);
+
+  const handleSelectDeveloper = async (developer) => {
+    try {
+      const response = await axios.post("http://localhost:3000/api/chat/chatroom", {
+        developer_id: developer.developer_id,
+        tester_id,
+      });
+
+      const chatroom = response.data;
+      setSelectedDeveloper({ ...developer, chatroom_id: chatroom.chatroom_id });
+
+      socket.emit("joinChatroom", { chatroom_id: chatroom.chatroom_id });
+      fetchMessages(chatroom.chatroom_id);
+    } catch (error) {
+      console.error("Error handling chatroom:", error);
+    }
+  };
+
   const sendMessage = async () => {
     if (!newMessage.trim() || !selectedDeveloper || !selectedDeveloper.chatroom_id) return;
 
@@ -130,22 +87,18 @@ const handleSelectDeveloper = async (developer) => {
       sender_id: tester_id,
       sender_type: "Tester",
       message: newMessage,
+      timestamp: new Date().toISOString(),
     };
+
     try {
-      // Send the message to the server to store it in the database
       const response = await axios.post("http://localhost:3000/api/chat/messages", messageData);
-      
-      console.log("✅ Message stored in database:", response.data);
 
-      // Emit the message to other clients
       socket.emit("sendMessage", response.data);
-
-      // 🔥 Immediately update the chat UI
       setMessages((prevMessages) => [...prevMessages, response.data]);
       setNewMessage("");
-  } catch (error) {
-      console.error("❌ Error sending message:", error);
-  }
+    } catch (error) {
+      console.error("Error sending message:", error);
+    }
   };
 
   return (
@@ -153,7 +106,7 @@ const handleSelectDeveloper = async (developer) => {
       <Sidebar />
       <div className="flex-1 flex flex-col">
         <Navbar />
-        <div className="flex h-full">
+        <div className="flex h-[calc(110vh-150px)]">
           {/* Developer List */}
           <div className="w-1/4 bg-white border-r p-4">
             <h2 className="text-purple-700 text-xl font-semibold">Developers</h2>
@@ -177,20 +130,29 @@ const handleSelectDeveloper = async (developer) => {
             {selectedDeveloper ? (
               <>
                 <div className="bg-gray-200 p-4 font-semibold text-purple-700 text-lg border-b">
-                  Chat with{selectedDeveloper.developer_name} ({selectedDeveloper.project})
+                  Chat with {selectedDeveloper.developer_name} ({selectedDeveloper.project})
                 </div>
-                <div className="flex-1 p-4 overflow-y-auto">
+                <div className="flex-1 p-4 overflow-y-auto flex flex-col">
                   {messages.map((msg, index) => (
                     <div
                       key={index}
-                      className={`mb-2 p-2 rounded-lg ${
-                        msg.sender_type === "Tester"
-                          ? "bg-purple-700 text-white self-end"
-                          : "bg-gray-300 text-gray-800 self-start"
-                      } max-w-xs`}
+                      className={`flex mb-2 ${
+                        msg.sender_type === "Tester" ? "justify-end" : "justify-start"    
+                      }`}
                     >
-                      {msg.message}
-                    </div>
+                       <div
+                        className={`p-2 rounded-lg max-w-xs ${
+                          msg.sender_type === "Tester"
+                            ? "bg-purple-700 text-white"
+                            : "bg-purple-200 text-gray-900"
+                        }`}
+                        >
+                        <div  className="text-sm">{msg.message}</div>
+                        <div className="text-xs text-white-400 text-right mt-1">
+                          {new Date(msg.timestamp).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit", hour12: true })}
+                        </div>
+                        </div>
+                      </div>
                   ))}
                 </div>
                 <div className="p-4 border-t flex">
@@ -203,10 +165,7 @@ const handleSelectDeveloper = async (developer) => {
                   />
                   <button
                     className="ml-2 px-4 py-2 bg-purple-700 text-white rounded-lg"
-                    onClick={() => {
-                      console.log("Send button clicked"); // Debugging log
-                      sendMessage();
-                    }}
+                    onClick={sendMessage}
                   >
                     Send
                   </button>
