@@ -1,6 +1,7 @@
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom"; // Import useNavigate
 import { FaEye, FaEyeSlash } from "react-icons/fa";
+import axios from "axios"; // Import axios
 
 const LoginPage = () => {
   const navigate = useNavigate(); // Initialize navigation
@@ -9,12 +10,13 @@ const LoginPage = () => {
     password: "",
   });
   const [showPassword, setShowPassword] = useState(false);
-
+  const [error, setError] = useState(""); // Define error state
   const handleChange = (e) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
   };
   // Handle login submission
-  const handleLogin = async () => {
+  const handleLogin = async () => 
+    {
     setError(""); // Clear previous errors
 
     if (!formData.email || !formData.password) {
@@ -31,7 +33,7 @@ const LoginPage = () => {
       else if (role === "Developer") navigate("/devdashboard");
       else if (role === "Tester") navigate("/dashboard");
       else if (role === "Project Manager") navigate("/managerdashboard");
-
+      else setError("Invalid role!");
     } catch (err) {
       setError(err.response?.data?.error || "Invalid email or password!");
     }
@@ -69,7 +71,7 @@ const LoginPage = () => {
             </span>
           </div>
           <p className="text-right text-sm text-blue-600 cursor-pointer">Forgot password?</p>
-          <button className="w-full p-3 bg-purple-700 text-white rounded-md mt-4">Sign In</button> {/* Add onClick Event */}
+          <button className="w-full p-3 bg-purple-700 text-white rounded-md mt-4" onClick={handleLogin}>Sign In</button> 
         </div>
 
         {/* Redirect to Signup Page */}
