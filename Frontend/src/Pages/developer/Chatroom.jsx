@@ -6,12 +6,24 @@ import Navbar from "./navbar";
 
 const socket = io("http://localhost:3000"); // Replace with your backend URL
 
+
 const Chatroom = () => {
   const [testers, setTesters] = useState([]);
   const [selectedTester, setSelectedTester] = useState(null);
   const [messages, setMessages] = useState([]);
   const [newMessage, setNewMessage] = useState("");
   const developer_id = 1; // Replace with the actual logged-in developer ID
+  useEffect(() => {
+    console.log("🔌 Connecting to socket...");
+    socket.on("connect", () => {
+      console.log("✅ Socket connected:", socket.id);
+    });
+  
+    return () => {
+      console.log("❌ Disconnecting socket...");
+      socket.off("connect");
+    };
+  }, []);
 
   // Fetch the list of testers who assigned bugs to the developer
   useEffect(() => {
@@ -107,18 +119,36 @@ useEffect(() => {
   socket.on("receiveMessage", (newMsg) => {
     console.log("📥 New message received in frontend:", newMsg);
 
+    if (!newMsg) {
+      console.error("❌ Received an undefined or null message");
+      return;
+    }
+
+    if (!newMsg.chatroom_id) {
+      console.error("❌ Missing chatroom_id in received message:", newMsg);
+      return;
+    }
+
+    if (!newMsg.message) {
+      console.error("❌ Missing message content in received message:", newMsg);
+      return;
+    }
+
     // Check if the message belongs to the currently selected chatroom
     if (selectedTester && newMsg.chatroom_id === selectedTester.chatroom_id) {
+      console.log("✅ Message belongs to current chatroom. Updating UI...");
       setMessages((prevMessages) => [...prevMessages, newMsg]);
+    } else {
+      console.log("❌ Message does not match selected chatroom. Ignoring.");
     }
   });
 
   return () => {
+    console.log("ℹ️ Cleaning up receiveMessage listener.");
     socket.off("receiveMessage");
   };
-}, [selectedTester]); // Depend on selectedTester to ensure it updates correctly
+}, [selectedTester]); 
 
-  
 
   // Send a message
  

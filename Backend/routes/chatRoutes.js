@@ -69,18 +69,6 @@ router.post("/chatroom", async (req, res) => {
 });
 
 
-
-
-// 📌 Fetch Messages for a Chatroom
-/*router.get("/messages/:chatroomId", async (req, res) => {
-    try {
-        const chatroom = await Chatroom.findById(req.params.chatroomId);
-        if (!chatroom) return res.status(404).json({ error: "Chatroom not found" });
-        res.json(chatroom.messages);
-    } catch (err) {
-        res.status(500).json({ error: "Internal Server Error" });
-    }
-});*/
 // 📌 Fetch Messages for a Chatroom
 router.get("/messages/:chatroomId", async (req, res) => {
     try {

@@ -8,10 +8,12 @@ function setupChatSocket(server) {
             methods: ["GET", "POST"]
         }
     });
-
+    // Store connected users (socket.id mapped to user ID)
+    const connectedUsers = {};
+    
     io.on("connection", (socket) => {
         console.log("User connected:", socket.id);
-
+      
         // When a user joins a chatroom
         socket.on("joinChatroom", async ({ bug_id, project_id, developer_id, tester_id }) => {
             try {
@@ -31,6 +33,10 @@ function setupChatSocket(server) {
         
                 socket.join(chatroom._id.toString());
                 console.log(`User joined chatroom: ${chatroom._id}`);
+
+                connectedUsers[developer_id] = socket.id;
+                connectedUsers[tester_id] = socket.id;
+
         
                 // Send chatroom ID and previous messages
                 socket.emit("chatroomJoined", { chatroom_id: chatroom._id, messages: chatroom.messages });
@@ -71,21 +77,39 @@ function setupChatSocket(server) {
               io.to(messageData.chatroom_id).emit("receiveMessage", newMessage);
                // ✅ Also send an API response for confirmation (optional)
             socket.emit("messageSaved", { success: true, message: newMessage });
-            //toast noti
-            // ✅ Emit a confirmation event for tester
+          
+            // ✅ Emit a confirmation event for user
             io.to(messageData.chatroom_id).emit("messageSent", {
                 message: messageData.message,
                 sender: messageData.sender_type,
             });
-            //for devnoti.jsx
-           /* io.emit("chatNotification", {
-                chatroom_id: messageData.chatroom_id,
-                message: `New message from ${messageData.sender_type === 'Tester' ? 'Tester' : 'Developer'}!`,
-                time: new Date().toLocaleTimeString(),
-              });
-            console.log("🔔 Emitting Notification:", notification);
-            io.emit("chatNotification", notification);*/
-            } catch (error) {
+             // ✅ Notify recipient about new message
+             const recipient_id = messageData.sender_type === "developer" 
+            ? chatroom.tester_id 
+            : chatroom.developer_id;
+          
+            // Notify recipient about new message using socket.io
+
+            console.log("📌 Sending notification to:", recipient_id, "Socket ID:", connectedUsers[recipient_id]);
+
+            if (connectedUsers[recipient_id]) {
+                io.to(connectedUsers[recipient_id]).emit("newMessage", {
+                    chatroom_id: messageData.chatroom_id,
+                    message: messageData.message,
+                    sender: messageData.sender_type,
+                });
+           /* io.to(recipient_id.toString()).emit("newMessage", {
+            chatroom_id: messageData.chatroom_id,
+            message: messageData.message,
+            sender: messageData.sender_type,
+           });*/
+
+    console.log("🔔 Notification sent to recipient:", recipient_id);
+    } else {
+            console.log("�� No recipient found for:", recipient_id);
+
+            }
+         } catch (error) {
               console.error("❌ Error storing message:", error);
               socket.emit("messageError", { success: false, error: error.message });
             }
