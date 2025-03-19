@@ -14,7 +14,7 @@ router.get("/testers/:developer_id", async (req, res) => {
     }
 });
 
-// 📌 Get Developers Who Were Assigned Bugs by a Tester
+
 // 📌 Get Developers Who Were Assigned Bugs by a Tester (Corrected)
 router.get("/developers/:tester_id", async (req, res) => {
     try {
