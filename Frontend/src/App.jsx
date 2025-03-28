@@ -40,6 +40,7 @@ import Managerdashboard from './Pages/manager/managerdash';
 import DevNotifications from './Pages/developer/Devnoti';
 import ManNotifications from './Pages/manager/Manoti';
 import TestNotifications from './Pages/tester/Notitester';
+import ViewUser from './Pages/admin/viewuser';
 function App() {
   
   return (
@@ -84,6 +85,7 @@ function App() {
       <Route path="/devnotifications" element={<DevNotifications/>}/>
       <Route path="/manotifications" element={<ManNotifications/>}/>
       <Route path="/testnotifications" element={<TestNotifications/>}/>
+      <Route path="/view-user/:userId/:role" element={<ViewUser />} /> 
      </Routes>
        </Router>
   )

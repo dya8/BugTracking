@@ -1,4 +1,5 @@
 const { Server } = require("socket.io");
+const mongoose = require("mongoose");
 const { Chatroom } = require("../db");
 
 function setupChatSocket(server) {
@@ -8,6 +9,8 @@ function setupChatSocket(server) {
             methods: ["GET", "POST"]
         }
     });
+    global.io = io; // ✅ Set global.io here
+
     // Store connected users (socket.id mapped to user ID)
     const connectedUsers = {};
     
@@ -34,9 +37,7 @@ function setupChatSocket(server) {
                 socket.join(chatroom._id.toString());
                 console.log(`User joined chatroom: ${chatroom._id}`);
 
-                connectedUsers[developer_id] = socket.id;
-                connectedUsers[tester_id] = socket.id;
-
+               // connectedUsers[user_id] = socket.id; 
         
                 // Send chatroom ID and previous messages
                 socket.emit("chatroomJoined", { chatroom_id: chatroom._id, messages: chatroom.messages });
@@ -83,32 +84,35 @@ function setupChatSocket(server) {
                 message: messageData.message,
                 sender: messageData.sender_type,
             });
-             // ✅ Notify recipient about new message
+             /* ✅ Notify recipient about new message
              const recipient_id = messageData.sender_type === "developer" 
             ? chatroom.tester_id 
-            : chatroom.developer_id;
+            : chatroom.developer_id; */
           
             // Notify recipient about new message using socket.io
 
-            console.log("📌 Sending notification to:", recipient_id, "Socket ID:", connectedUsers[recipient_id]);
-
-            if (connectedUsers[recipient_id]) {
+           // console.log("📌 Sending notification to:", recipient_id, "Socket ID:", connectedUsers[recipient_id]);
+            /*const recipientSocket = Object.entries(connectedUsers).find(
+                ([, user]) => user.userId === recipient_id
+            );*/
+           /* if (connectedUsers[recipient_id]) {
                 io.to(connectedUsers[recipient_id]).emit("newMessage", {
                     chatroom_id: messageData.chatroom_id,
                     message: messageData.message,
                     sender: messageData.sender_type,
-                });
-           /* io.to(recipient_id.toString()).emit("newMessage", {
-            chatroom_id: messageData.chatroom_id,
-            message: messageData.message,
-            sender: messageData.sender_type,
-           });*/
+                });*/
+           /* if (recipientSocket) {
+                io.to(recipientSocket[0]).emit("newMessage", {
+                    chatroom_id: messageData.chatroom_id,
+                    message: messageData.message,
+                    sender: messageData.sender_type,
+                });*/
 
-    console.log("🔔 Notification sent to recipient:", recipient_id);
+    /* console.log("🔔 Notification sent to recipient:", recipient_id);
     } else {
             console.log("�� No recipient found for:", recipient_id);
 
-            }
+            } */
          } catch (error) {
               console.error("❌ Error storing message:", error);
               socket.emit("messageError", { success: false, error: error.message });
@@ -118,10 +122,69 @@ function setupChatSocket(server) {
         // Handle user disconnection
         socket.on("disconnect", () => {
             console.log("User disconnected:", socket.id);
+            // Remove the disconnected user from the connected users list
+            for (const userId in connectedUsers) {
+                if (connectedUsers[userId] === socket.id) {
+                    delete connectedUsers[userId];
+                    console.log(`ℹ️ Removed user ${userId} from connected users`);
+                    break;
+                }
+            }
+        });
+        socket.on("disconnect", () => {
+            console.log("User disconnected:", socket.id);
         });
     });
 
+    
+    // Ensure MongoDB is ready before watching changes
+    mongoose.connection.once("open", () => {
+        console.log("✅ MongoDB Connected. Starting Change Stream...");
+        watchChatroomChanges(io);
+    });
     return io;
 }
 
-module.exports = setupChatSocket;
+// ✅ Function to watch for MongoDB changes
+async function watchChatroomChanges(io) {
+    try {
+        const chatroomCollection = mongoose.connection.collection("chatrooms");
+        const changeStream = chatroomCollection.watch([], { fullDocument: "updateLookup" });
+
+        changeStream.on("change", async (change) => {
+            if (change.operationType === "update" && change.updateDescription.updatedFields.messages) {
+                const chatroomId = change.documentKey._id;
+                const updatedChatroom = await Chatroom.findById(chatroomId);
+                const lastMessage = updatedChatroom.messages[updatedChatroom.messages.length - 1];
+
+                if (lastMessage) {
+                    console.log("🆕 New message detected:", lastMessage);
+
+                    const recipient_id = lastMessage.sender_type === "developer"
+                        ? updatedChatroom.tester_id
+                        : updatedChatroom.developer_id;
+
+                    console.log("🔔 Sending real-time update to:", recipient_id);
+
+                    io.to(chatroomId.toString()).emit("newMessage", {
+                        chatroom_id: chatroomId.toString(),
+                        message: lastMessage.message,
+                        sender: lastMessage.sender_type,
+                    });
+
+                    console.log("✅ Real-time update sent!");
+                }
+            }
+        });
+
+        changeStream.on("error", (err) => {
+            console.error("❌ MongoDB Change Stream Error:", err);
+        });
+
+    } catch (error) {
+        console.error("❌ Error setting up MongoDB Change Stream:", error);
+    }
+}
+
+// ✅ Export both functions properly
+module.exports = { setupChatSocket, watchChatroomChanges };

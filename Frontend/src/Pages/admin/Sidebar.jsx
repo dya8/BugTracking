@@ -6,7 +6,7 @@ export default function Sidebar() {
   const [isOpen, setIsOpen] = useState(true);
 
   return (
-    <aside className={`bg-purple-700 text-white p-5 h-screen flex flex-col transition-all ${isOpen ? "w-64" : "w-20"}`}>
+    <aside className={`bg-purple-700 text-white p-5 h-screen h-full flex flex-col transition-all ${isOpen ? "w-64" : "w-20"}`}>
       {/* Toggle Button */}
       <button className="mb-4 bg-purple-700 text-white focus:outline-none hover:bg-transparent" onClick={() => setIsOpen(!isOpen)}>
         <FaBars size={20} />

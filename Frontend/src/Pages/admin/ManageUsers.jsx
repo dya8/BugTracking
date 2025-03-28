@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState,useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent } from "@/components/ui/card";
@@ -11,9 +11,135 @@ export default function ManageUsers() {
   const [users, setUsers] = useState([{ email: "", role: "" }]);
   const [addedUsers, setAddedUsers] = useState([]);
   const [showPopup, setShowPopup] = useState(false);
-
+  const [fetchedUsers, setFetchedUsers] = useState([]);
+  const [loading, setLoading] = useState(false);
+  const adminId = 1;
   const navigate = useNavigate(); // ✅ Initialize navigate
+  useEffect(() => {
+    const fetchUsers = async () => {
+      setLoading(true);
+      try {
+        console.log("Admin ID:", adminId);
+        const response = await fetch(`http://localhost:3000/api/users/${adminId}`);
+        const data = await response.json();
+  
+        console.log("Fetched Data:", data); // Debugging line
+  
+        if (response.ok) {
+          // Ensure it's an array before setting state
+          if (Array.isArray(data)) {
+              // Modify API response to store the user ID without displaying it
+              const formattedUsers = data.map(user => ({
+                id: user.developer_id || user.tester_id || user.manager_id, // Store ID
+                name: user.name, // Display name only
+                role: user.role, // Display role
+              }));
+            setFetchedUsers(data);
+          } else {
+            console.error("Expected an array but got:", data);
+            setFetchedUsers([]); // Prevents .map() error
+          }
+        } else {
+          console.error("API Error:", data.message);
+          setFetchedUsers([]); // Set empty array to prevent crash
+        }
+      } catch (error) {
+        console.error("Network Error:", error);
+        setFetchedUsers([]); // Handle network failures
+      } finally {
+        setLoading(false);
+      }
+    };
+  
+    if (adminId) fetchUsers(); // Only fetch if adminId is valid
+  }, [adminId]);
+  /*const handleDeleteUser = async (user) => {
+    console.log("Full User Object:", user);  // Debugging
 
+    // Check what keys exist in the user object
+    console.log("User Keys:", Object.keys(user));
+
+    let userId;
+    if (user.role === "Developer") userId = user.developer_id;
+    else if (user.role === "Tester") userId = user.tester_id;
+    else if (user.role === "Project Manager") userId = user.manager_id;
+    else {
+        alert("Invalid role detected.");
+        return;
+    }
+
+    console.log("Converted userId:", userId);  // Debugging
+
+    if (!userId || isNaN(Number(userId))) {
+        alert("Invalid user ID received.");
+        return;
+    }
+
+    const confirmDelete = window.confirm(`Are you sure you want to delete ${user.name}?`);
+    if (!confirmDelete) return;
+
+    try {
+        const response = await fetch(`http://localhost:3000/api/users/${userId}?role=${user.role}`, {
+            method: "DELETE",
+        });
+
+        const data = await response.json();
+
+        if (response.ok) {
+            alert(data.message);
+            setFetchedUsers(fetchedUsers.filter(u => u.id !== userId));
+        } else {
+            alert("Failed to delete user: " + data.message);
+        }
+    } catch (error) {
+        console.error("Error deleting user:", error);
+        alert("An error occurred while deleting the user.");
+    }
+};*/
+const handleDeleteUser = async (user) => {
+  console.log("Full User Object:", user);
+
+  // Ensure the correct ID is retrieved based on the role
+  let userId;
+  if (user.role === "Developer") userId = user.id || user.developer_id;
+  else if (user.role === "Tester") userId = user.id || user.tester_id;
+  else if (user.role === "Project Manager") userId = user.id || user.manager_id;
+  else {
+      alert("Invalid role detected.");
+      return;
+  }
+
+  console.log("Extracted userId:", userId);  // Debugging
+
+
+  if (!userId || isNaN(Number(userId))) {
+      alert("Invalid user ID received.");
+      return;
+  }
+
+  const confirmDelete = window.confirm(`Are you sure you want to delete ${user.name}?`);
+  if (!confirmDelete) return;
+
+  try {
+      const response = await fetch(`http://localhost:3000/api/users/${userId}?role=${user.role}`, {
+          method: "DELETE",
+      });
+
+      const data = await response.json();
+
+      if (response.ok) {
+          alert(data.message);
+          setFetchedUsers(fetchedUsers.filter(u => u.id !== userId));
+      } else {
+          alert("Failed to delete user: " + data.message);
+      }
+  } catch (error) {
+      console.error("Error deleting user:", error);
+      alert("An error occurred while deleting the user.");
+  }
+};
+
+  
   const handleInputChange = (index, field, value) => {
     const newUsers = [...users];
     newUsers[index][field] = value;
@@ -78,9 +204,52 @@ export default function ManageUsers() {
               Add user <Plus className="w-4 h-4" />
             </button>
           </header>
+           {/* Fetched Users from API */}
+          <div className="mt-5 bg-white p-4 shadow rounded-lg">
+  <h2 className="text-lg font-semibold mb-3">Company Users</h2>
+  {loading ? (
+    <p className="text-gray-500">Loading users...</p>
+  ) : fetchedUsers.length === 0 ? (
+    <p className="text-gray-500">No users found.</p>
+  ) : (
+    <div className="overflow-x-auto">
+      <table className="min-w-full border border-gray-300">
+        <thead className="bg-purple-200">
+          <tr>
+            <th className="p-3 border">User Name</th>
+            <th className="p-3 border">Role</th>
+            <th className="p-3 border">Actions</th>
+          </tr>
+        </thead>
+        <tbody> 
+        {Array.isArray(fetchedUsers) && fetchedUsers.length > 0 ? (
+  fetchedUsers.map((user, index) => (
+    <tr key={index} className="border-b hover:bg-gray-100">
+      <td className="p-3 border">{user.name}</td>
+      <td className="p-3 border">{user.role}</td>
+      <td className="p-3 border flex gap-2 justify-center">
+      <button 
+  className="text-purple-600 hover:text-purple-800"
+  onClick={() => navigate(`/view-user/${user.id}/${user.role}`)}
+>
+  👤
+</button>
+
+        <button className="text-red-600 hover:text-red-800" onClick={() => handleDeleteUser(user)}>❌</button>
+      </td>
+    </tr>
+  ))
+) : (
+  <p className="text-gray-500">{fetchedUsers.length === 0 ? "No users found." : "Error fetching users."}</p>
+)}
+        </tbody>
+      </table>
+    </div>
+  )}
+</div>
 
           {/* Display Added Users */}
-          <div className="mt-5 bg-white p-4 shadow rounded-lg">
+          {/*<div className="mt-5 bg-white p-4 shadow rounded-lg">
             <h2 className="text-lg font-semibold mb-3">Users</h2>
             {addedUsers.length === 0 ? (
               <p className="text-gray-500">No users added yet.</p>
@@ -93,7 +262,7 @@ export default function ManageUsers() {
                 ))}
               </ul>
             )}
-          </div>
+          </div>*/}
         </div>
 
         {/* Add Users Popup */}

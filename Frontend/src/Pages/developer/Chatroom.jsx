@@ -1,12 +1,8 @@
 import React, { useState, useEffect } from "react";
-import { io } from "socket.io-client";
 import axios from "axios";
 import Sidebar from "./sidebar";
 import Navbar from "./navbar";
-
-const socket = io("http://localhost:3000"); // Replace with your backend URL
-
-
+import socket from "@/socket";
 const Chatroom = () => {
   const [testers, setTesters] = useState([]);
   const [selectedTester, setSelectedTester] = useState(null);
@@ -15,12 +11,15 @@ const Chatroom = () => {
   const developer_id = 1; // Replace with the actual logged-in developer ID
   useEffect(() => {
     console.log("🔌 Connecting to socket...");
+    if (!socket.connected) {
+      socket.connect();
+    }
     socket.on("connect", () => {
       console.log("✅ Socket connected:", socket.id);
     });
   
     return () => {
-      console.log("❌ Disconnecting socket...");
+      console.log("ℹ️ Cleaning up connect listener...");
       socket.off("connect");
     };
   }, []);

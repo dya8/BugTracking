@@ -1,90 +1,115 @@
-import { useState } from "react";
+import React, { useState, useEffect } from "react";
+import { useParams, useNavigate } from "react-router-dom";
 import Sidebar from "./Sidebar";
 import Navbar from "./Navbar";
-import { useParams } from "react-router-dom";
-
 
 const BugDetailsM = () => {
+  const { id } = useParams();
+  const navigate = useNavigate();
+  const [bug, setBug] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [developers, setDevelopers] = useState([]); // Store developers list
   const [selectedDeveloper, setSelectedDeveloper] = useState("");
   const [dueDate, setDueDate] = useState("");
 
-  // Dummy bug data (Replace with API data if fetching from backend)
-  const [bugs] = useState([
-    { id: 1, name: "Login Issue", project: "Website", assignedTo: "Dev A", status: "In Progress", priority: "High", dueDate: "March 15, 3:00 PM" },
-    { id: 2, name: "Page Crash", project: "Mobile App", assignedTo: "Dev B", status: "Verified", priority: "Medium", dueDate: "March 18, 12:30 PM" },
-    { id: 3, name: "UI Glitch", project: "Dashboard", assignedTo: "Dev C", status: "Resolved", priority: "Low", dueDate: "March 20, 6:45 PM" },
-    { id: 4, name: "API Timeout", project: "Backend", assignedTo: "Dev D", status: "Stuck", priority: "High", dueDate: "March 22, 10:15 AM" }
-  ]);
+  useEffect(() => {
+    // Fetch bug details
+    fetch(`http://localhost:3000/api/bugsM/${id}`)
+      .then((res) => res.json())
+      .then((data) => {
+        setBug(data);
+        setLoading(false);
+        if (data.project_id) {
+          fetchDevelopers(data.project_id); // Fetch developers for the project
+        }
+      })
+      .catch((err) => {
+        console.error("Error fetching bug details:", err);
+        setLoading(false);
+      });
+  }, [id]);
 
-  // Select the bug with id 4 (Change logic to dynamically get bug details in real use case)
-  const { bugId } = useParams();
-  const bug = bugs.find((b) => b.id === 4);
+  // Fetch developers assigned to the project
+  const fetchDevelopers = (projectId) => {
+    fetch(`http://localhost:3000/api/projects/${projectId}/developers`)
+      .then((res) => res.json())
+      .then((data) => setDevelopers(data))
+      .catch((err) => console.error("Error fetching developers:", err));
+  };
 
-  if (!bug) {
-    return <div className="text-center text-red-500">Bug not found!</div>;
-  }
+  if (loading) return <div className="text-center text-gray-500">Loading bug details...</div>;
+  if (!bug) return <div className="text-center text-red-500">Bug not found!</div>;
+
+  const formatDate = (dateString) => {
+    if (!dateString) return "N/A";
+    return new Intl.DateTimeFormat("en-US", {
+      year: "numeric",
+      month: "long",
+      day: "numeric",
+      hour: "2-digit",
+      minute: "2-digit",
+      hour12: true,
+    }).format(new Date(dateString));
+  };
 
   const handleSubmit = (e) => {
     e.preventDefault();
-    if (!dueDate) {
-      alert("Due date is required!");
+    if (!dueDate || !selectedDeveloper) {
+      alert("Both due date and reassigned developer are required!");
       return;
     }
-    if (!selectedDeveloper) {
-      alert("Reassign to field is required!");
-      return;
-    }
-    console.log("Bug updated:", { selectedDeveloper, dueDate });
-    // TODO: Send update request to backend
+
+    fetch(`http://localhost:3000/api/bugsM/${id}/update`, {
+      method: "PUT",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ dueDate, assignedTo: selectedDeveloper }),
+    })
+      .then((res) => res.json())
+      .then(() => {
+        alert("Bug updated successfully!");
+        navigate("/trackbugs");
+      })
+      .catch((err) => console.error("Error updating bug:", err));
   };
 
   return (
     <div className="flex min-h-screen">
-      {/* Sidebar */}
       <Sidebar />
-
-      {/* Main Content with Navbar */}
       <div className="flex-1 flex flex-col">
-        {/* Navbar */}
         <Navbar />
-
-        {/* Bug Details Section */}
         <div className="flex-1 flex flex-col items-center justify-center bg-gray-100 p-10">
           <div className="bg-white p-6 rounded-lg shadow-md w-full max-w-md text-center">
-            <button className="bg-purple-600 text-white px-3 py-1 rounded mb-4">
+            <button onClick={() => navigate("/trackbugs")} className="bg-purple-600 text-white px-3 py-1 rounded mb-4">
               ← Back to Bugs
             </button>
-
-            {/* Centered Bug Name */}
             <h2 className="text-xl font-bold text-purple-800 flex items-center justify-center gap-2">
-              🐞 {bug.name}
+              🐞 {bug.bug_name}
             </h2>
-
-            <p><strong>Project:</strong> <span className="text-gray-700">{bug.project}</span></p>
-            <p><strong>Assigned to:</strong> <span className="text-gray-800">{bug.assignedTo}</span></p>
+            <p><strong>Project:</strong> <span className="text-gray-700">{bug.project_name}</span></p>
             <p><strong>Priority:</strong> <span className="text-red-500 font-semibold">{bug.priority}</span></p>
-            <p><strong>Bug Status:</strong> <span className="text-red-500">{bug.status}</span></p>
-            <p><strong>Due Date:</strong> <span className="text-gray-700">{bug.dueDate}</span></p>
+            <p><strong>Bug Status:</strong> <span className="text-red-500">{bug.bug_status}</span></p>
+            <p><strong>Assigned to:</strong> <span className="text-gray-800">{bug.assigned_to}</span></p>
+            <p><strong>Reported by:</strong> <span className="text-gray-800">{bug.reported_by}</span></p>
 
-            {/* Show form only if bug status is "Stuck" */}
-            {bug.status === "Stuck" && (
+            <p><strong>Due Date:</strong> <span className="text-gray-700">{formatDate(bug.due)}</span></p>
+
+            {bug.bug_status === "Stuck" && (
               <form onSubmit={handleSubmit} className="mt-6 bg-gray-100 p-4 rounded-lg shadow-md">
-                {/* Reassign Dropdown (Optional) */}
-                <label className="block text-purple-700 font-semibold mb-1">Reassign to (Required):</label>
+                <label className="block text-purple-700 font-semibold mb-1">Reassign to:</label>
                 <select
                   className="w-full p-2 border border-gray-300 rounded-md mb-4 bg-white text-black"
                   value={selectedDeveloper}
                   onChange={(e) => setSelectedDeveloper(e.target.value)}
                 >
                   <option value="">Select Developer</option>
-                  <option value="Dev A">Dev A</option>
-                  <option value="Dev B">Dev B</option>
-                  <option value="Dev C">Dev C</option>
-                  <option value="Dev D">Dev D</option>
+                  {developers.map((dev) => (
+                    <option key={dev.developer_id} value={dev.developer_id}>
+                      {dev.developer_name}
+                    </option>
+                  ))}
                 </select>
 
-                {/* Extend Due Date (Required) */}
-                <label className="block text-purple-700 font-semibold mb-1">Extend due (Required):</label>
+                <label className="block text-purple-700 font-semibold mb-1">Extend Due Date:</label>
                 <input
                   type="datetime-local"
                   className="w-full p-2 border border-gray-300 rounded-md mb-4 bg-white text-black"

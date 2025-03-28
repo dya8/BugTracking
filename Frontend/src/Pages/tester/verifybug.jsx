@@ -1,18 +1,31 @@
-import React, { useState } from "react";
+import React, { useState,useEffect } from "react";
 import Sidebar from "./Sidebar";
 import Navbar from "./Navbar";
 import { FaChevronRight } from "react-icons/fa";
 import { useNavigate } from "react-router-dom";
 
 export default function VerifyBugs() {
-  const [bugs] = useState([
-    { id: 1, name: "Login Issue", project: "Website", assigned: "Dev A", status: "Resolved", priority: "High", due: "2024-03-15T10:00" },
-    { id: 2, name: "Page Crash", project: "Mobile App", assigned: "Dev B", status: "Resolved", priority: "Medium", due: "2024-03-18T14:30" },
-    { id: 3, name: "UI Glitch", project: "Dashboard", assigned: "Dev C", status: "Verified", priority: "Low", due: "2024-03-20T16:45" },
-    { id: 4, name: "API Timeout", project: "Backend", assigned: "Dev D", status: "Reopen", priority: "High", due: "2024-03-22T09:15" }
-  ]);
-
+  const [bugs, setBugs] = useState([]); // State for bugs
   const navigate = useNavigate();
+  const testerId = 1; 
+   // Fetch resolved bugs from backend
+   useEffect(() => {
+    if (!testerId) {
+      console.error("Tester ID not found");
+      return;
+    }
+
+    fetch(`http://localhost:3000/api/resolved/${testerId}`)
+      .then((res) => res.json())
+      .then((data) => {
+        if (data.error || data.message) {
+          setBugs([]);
+        } else {
+          setBugs(data.bugs||[]);
+        }
+      })
+      .catch((err) => console.error("Error fetching bugs:", err));
+  }, [testerId]);
 
   const handleArrowClick = (bugId) => {
     navigate(`/verify-bugs/${bugId}`);
@@ -33,29 +46,31 @@ export default function VerifyBugs() {
                 <tr>
                   <th className="p-3">Bug Name</th>
                   <th className="p-3">Project Name</th>
-                  <th className="p-3">Assigned On</th>
+                  <th className="p-3">Assigned To</th>
                   <th className="p-3">Bug Status</th>
                   <th className="p-3">Priority</th>
-                  <th className="p-3">Due</th>
+                  <th className="p-3">Resolved At</th>
                   <th className="p-3"></th>
                 </tr>
               </thead>
               <tbody>
                 {bugs.length > 0 ? (
                   bugs.map((bug) => (
-                    <tr key={bug.id} className="border-b hover:bg-gray-100">
-                      <td className="p-3">{bug.name}</td>
-                      <td className="p-3">{bug.project}</td>
-                      <td className="p-3">{bug.assigned}</td>
-                      <td className="p-3">{bug.status}</td>
+                    <tr key={bug.bug_id || bug.id} className="border-b hover:bg-gray-100">
+                      <td className="p-3">{bug.bug_name}</td>
+                      <td className="p-3">{bug.project_name || "N/A"}</td>
+                      <td className="p-3">{bug.assigned_to}</td>
+                      <td className="p-3">{bug.bug_status}</td>
                       <td className="p-3">{bug.priority}</td>
-                      <td className="p-3">
-                        {new Date(bug.due).toLocaleString()}
+                      <td className="p-3 cursor-pointer">
+                      {bug.resolved_at
+                          ? new Date(bug.resolved_at).toLocaleString()
+                          : "N/A"}
                       </td>
                       <td className="p-3 cursor-pointer">
                         <FaChevronRight
                           className="text-purple-600"
-                          onClick={() => handleArrowClick(bug.id)} // Add onClick here
+                          onClick={() => handleArrowClick(bug.bug_id)}
                         />
                       </td>
                     </tr>

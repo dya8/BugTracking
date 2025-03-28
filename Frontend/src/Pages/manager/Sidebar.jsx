@@ -6,7 +6,7 @@ export default function Sidebar() {
   const [isOpen, setIsOpen] = useState(true);
 
   return (
-    <aside className={`bg-purple-700 text-white p-5 h-screen flex flex-col transition-all duration-300 ${isOpen ? "w-64" : "w-20"}`}>
+    <aside className={`bg-purple-700 text-white p-5 h-screen h-full flex flex-col transition-all duration-300 ${isOpen ? "w-64" : "w-20"}`}>
       {/* Toggle Button */}
       <button 
         className="mb-4 flex items-center space-x-2 bg-transparent text-white focus:outline-none hover:bg-purple-600 p-2 rounded-lg" 
@@ -23,7 +23,7 @@ export default function Sidebar() {
         <SidebarItem to="/current-projects" icon={<FaFolderOpen size={18} className="text-white" />} label="Current Projects" isOpen={isOpen} />
         <SidebarItem to="/trackbugs" icon={<FaBug size={18} className="text-white" />} label="Track Bugs" isOpen={isOpen} />
         <SidebarItem to="/reported-bugs" icon={<FaExclamationTriangle size={18} className="text-white" />} label="Reported Bugs" isOpen={isOpen} />
-        <SidebarItem to="/assign-due" icon={<FaClock size={18} className="text-white" />} label="Assign Due" isOpen={isOpen} />
+       {/* <SidebarItem to="/assign-due" icon={<FaClock size={18} className="text-white" />} label="Assign Due" isOpen={isOpen} /> */}
       </nav>
 
       {/* Footer Items */}

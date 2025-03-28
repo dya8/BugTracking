@@ -1,8 +1,14 @@
-
 #root {
-  max-width: 1280px;
-  margin: 0 auto;
+  width: 100vw;  /* Use full viewport width */
+  height: 100vh; /* Use full viewport height */
+  margin: 0;
   padding: 2rem;
   text-align: center;
+  overflow-x: hidden; /* Prevent horizontal scrolling */
 }
-
+.main-content {
+  height: 100vh; /* Full screen height */
+  overflow-y: auto; /* Scrolls content inside, not the whole page */
+  display: flex;
+  flex-direction: column;
+}

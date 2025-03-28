@@ -2,18 +2,40 @@ import React, { useState, useEffect } from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { useNavigate } from "react-router-dom";
+import { useParams } from "react-router-dom";
 import Sidebar from "./Sidebar";
 import Navbar from "./Navbar";
-import { io } from "socket.io-client";
+import socket from "../../socket";
 
-const socket = io("http://localhost:3000"); 
 export default function DevNotifications() {
   const navigate = useNavigate();
+  const { chatroom_id } = useParams();
   const [notifications, setNotifications] = useState([]);
 
   useEffect(() => {
-    // ✅ Listen for new chat notifications
-    socket.on("newMessage", (notification) => {
+    console.log("🔄 Trying to connect to socket...");
+    if (!socket.connected) {
+      socket.connect();
+    }
+    socket.on("connect", () => {
+        console.log("✅ Connected to WebSocket!");
+    });
+
+    socket.on("connect_error", (err) => {
+        console.error("❌ Socket connection error:", err);
+    });
+    return () => {
+      socket.off("connect");
+      socket.off("connect_error");
+    };
+  }, []);
+  useEffect(() => {
+    if (chatroom_id) {
+      socket.emit("joinChatroom", chatroom_id);
+      console.log(`🟢 Joined chatroom_${chatroom_id}`);
+    }
+   
+   /* const handleNewMessage = (notification) => {
       console.log("🔔 New Message Notification Received:", notification);
   
       const newNotif = {
@@ -23,9 +45,18 @@ export default function DevNotifications() {
       };
   
       setNotifications((prev) => [...prev, newNotif]);
+    };*/
+    socket.on("newMessage", (notification) => {
+      console.log("🔔 New Notification Received:", notification);
+
+      setNotifications((prev) => [
+        ...prev,
+        { message: "New Message", chatroom_id: notification.chatroom_id, time: new Date().toLocaleTimeString() },
+      ]);
     });
 
     return () => {
+      console.log("ℹ️ Cleaning up listeners...");
       socket.off("newMessage");
     };
   }, []);

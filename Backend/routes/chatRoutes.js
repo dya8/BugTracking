@@ -112,9 +112,28 @@ router.post("/messages", async (req, res) => {
 
         console.log("✅ Message stored successfully:", newMessage);
         res.status(200).json(newMessage);
+
+         // Emit real-time event (ensure `global.io` exists)
+         if (global.io) {
+            console.log("📢 Emitting real-time message...");
+            global.io.to(`chatroom_${chatroom_id}`).emit("newMessage", {
+                chatroom_id,
+                sender_id,
+                sender_type,
+                message,
+            });
+            console.log(`📢 Message emitted`);
+        } else {
+            console.error("❌ Error: global.io is not set");
+        }
+
     } catch (err) {
         console.error("❌ Error saving message:", err);
         res.status(500).json({ error: "Internal Server Error", details: err.message });
+         // Prevent multiple responses
+         if (!res.headersSent) {
+            res.status(500).json({ error: "Internal Server Error", details: err.message });
+        }
     }
 });
 

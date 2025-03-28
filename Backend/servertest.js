@@ -4,24 +4,26 @@ const cors = require("cors");
 const http = require("http");
 const { connectDB, Company, Admin, Project, Developer, Tester, Bug, Chatroom, ProjectManager } = require("./db"); // Import database setup and models
 const chatRoutes = require("./routes/chatRoutes");
-const setupChatSocket = require("./sockets/chatSocket");
+const {setupChatSocket} = require("./sockets/chatSocket");
+const { Server } = require("socket.io");
 
 const app = express();
+app.use(express.urlencoded({ extended: true }));
 const server = http.createServer(app);
-/*const io = socketIo(server, {
+const io = new Server(server, {
     cors: {
-        origin: "*",
-        methods: ["GET", "POST"]
-    }
-});*/
+      origin: "http://localhost:5173", // 👈 Your React frontend URL
+      methods: ["GET", "POST"],
+      credentials: true,
+    },
+  });
 app.use(express.json());
-app.use(cors());
+app.use(cors({ origin: "http://localhost:5173", credentials: true }));
 app.use("/api/chat", chatRoutes);
 
 // Connect to MongoDB
 connectDB();
-setupChatSocket(server);
-
+setupChatSocket(io);
 
 // Generate Unique ID
 const counterSchema = new mongoose.Schema({
@@ -156,7 +158,715 @@ app.post("/api/get-company-details", async (req, res) => {
   });
   
 
-     
+app.post("/api/bugs/report", async (req, res) => {  
+    try {
+        console.log("Request Body:", req.body);
+        const { bug_name, bug_type,bug_status, priority, assigned_to, project_id, description, comments, reported_by,due } = req.body;
+        
+        console.log(typeof req.body.bug_name, typeof req.body.bug_type, typeof req.body.reported_by);
+
+        // 🔹 Get the next bug_id from the counter collection
+        const counter = await Counter.findOneAndUpdate(
+            { entity:"Bug" }, // Unique identifier for bug_id counter
+            { $inc: { count: 1 } }, // Increment the counter
+            { new: true, upsert: true } // Create if it doesn't exist
+        );
+
+        
+        // 🔹 Convert `due_date` to Date object
+        const parsedDueDate = due ? new Date(due) : null;
+        if (parsedDueDate && isNaN(parsedDueDate.getTime())) {
+            return res.status(400).json({ message: "Invalid due_date format", received: due });
+        }
+
+        const newBug = new Bug({
+            bug_id: counter.count,  // Assign incremented bug_id
+            bug_name,
+            bug_status,  
+            bug_type,
+            priority,
+            assigned_to,
+            project_id,
+            description,
+            comments,
+            reported_by,
+            due:parsedDueDate
+        });
+
+        await newBug.save();
+        res.status(201).json({ message: "Bug reported successfully", bug: newBug });
+    } catch (error) {
+        console.error("Error reporting bug:", error);
+        res.status(500).json({ message: "Server error", error: error.message });
+    }
+});
+
+//assigned bugs of developer
+app.get("/api/bugs/assigned", async (req, res) => {
+    try {
+        const developerId = 1; // TODO: Replace with actual logged-in developer ID
+
+        if (!developerId) {
+            return res.status(400).json({ message: "Developer ID is required" });
+        }
+
+        // Fetch bugs assigned to the developer with specific statuses
+        const bugs = await Bug.find({
+            assigned_to: developerId,
+            bug_status: { $in: ["Open", "Reopen", "In Progress"] },
+        });
+
+        // Get unique project IDs
+        const projectIds = [...new Set(bugs.map(bug => bug.project_id))];
+
+        // Fetch project details
+        const projects = await Project.find({ project_id: { $in: projectIds } }).lean();
+        const projectNames = {};
+        projects.forEach(project => {
+            projectNames[project.project_id] = project.project_name;
+        });
+
+        // Get unique tester IDs
+        const testerIds = [...new Set(bugs.map(bug => bug.reported_by))];
+
+        // Fetch tester details
+        const testers = await Tester.find({ tester_id: { $in: testerIds } }).lean();
+        const testerNames = {};
+        testers.forEach(tester => {
+            testerNames[tester.tester_id] = tester.tester_name;
+        });
+
+        // Format the response correctly
+        const formattedBugs = bugs.map(bug => ({
+            bug_id: bug.bug_id,
+            bug_name: bug.bug_name,
+            project_name: projectNames[bug.project_id] || "Unknown Project",
+            assigned_by: testerNames[bug.reported_by] || "Unknown Tester",
+            bug_status: bug.bug_status,
+            priority: bug.priority,
+            due: bug.due ? new Date(bug.due).toISOString() : null // ✅ Send as ISO date
+        }));
+
+        res.json(formattedBugs); // ✅ Send the correctly formatted response
+    } catch (error) {
+        console.error("Error fetching assigned bugs:", error);
+        res.status(500).json({ message: "Server error" });
+    }
+});
+
+//fetch bug details for developer
+app.get("/api/bugs/:id", async (req, res) => {
+    try {
+        const bug = await Bug.findOne({ bug_id: Number(req.params.id) }).lean();
+
+        if (!bug) {
+            return res.status(404).json({ message: "Bug not found" });
+        }
+
+        console.log("Fetched Bug:", bug); // Debugging
+
+        // Fetch project details
+        const project = await Project.findOne({ project_id: Number(bug.project_id) }).lean();
+
+        if (!project) {
+            console.log(`Project with ID ${bug.project_id} not found`);
+        }
+
+        console.log("Fetched Project:", project); // Debugging
+
+        // Send response with project_name
+        res.json({
+            ...bug,
+            project_name: project ? project.project_name : "Unknown Project"
+        });
+    } catch (error) {
+        console.error("Error fetching bug:", error);
+        res.status(500).json({ message: "Server error" });
+    }
+});
+
+
+// Start working on a bug
+app.put("/api/bugs/:id/start", async (req, res) => {
+    try {
+        await Bug.updateOne({ bug_id: req.params.id }, { bug_status: "In Progress" });
+        res.json({ message: "Bug status updated to In Progress" });
+    } catch (error) {
+        console.error("Error updating bug:", error);
+        res.status(500).json({ message: "Server error" });
+    }
+});
+
+// Resolve a bug
+app.put("/api/bugs/resolve/:id", async (req, res) => {
+    try {
+        const { resolved_at } = req.body;
+      const bug = await Bug.findOneAndUpdate(
+        { bug_id: Number(req.params.id) },
+        { bug_status: "Resolved",resolved_at },
+        { new: true } // This ensures we get the updated bug back
+      );
+  
+      if (!bug) return res.status(404).json({ message: "Bug not found" });
+  
+      res.json({ message: "Bug resolved successfully", bug });
+    } catch (error) {
+      console.error("Error resolving bug:", error);
+      res.status(500).json({ message: "Server error", error: error.message });
+    }
+  });
+
+// Mark bug as Stuck
+app.put("/api/bugs/:id/stuck", async (req, res) => {
+    try {
+      const bug = await Bug.findOneAndUpdate(
+        { bug_id: Number(req.params.id) },
+        { bug_status: "Stuck" },
+        { new: true }
+      );
+  
+      if (!bug) return res.status(404).json({ message: "Bug not found" });
+  
+      res.json({ message: "Bug marked as Stuck", bug });
+    } catch (error) {
+      console.error("Error updating bug to Stuck:", error);
+      res.status(500).json({ message: "Server error", error: error.message });
+    }
+  });
+  
+
+app.get("/api/bugs",async(req,res) => {
+    try{
+        const testerId = 1;
+        
+    if (!testerId) {
+        return res.status(400).json({ message: "Tester ID is required" });
+      }
+  
+      // Fetch all bugs reported by this tester
+      const bugs = await Bug.find({ reported_by: testerId });
+      const projectIds = [...new Set(bugs.map(bug => Number(bug.project_id)))]; // Unique project IDs
+      const projects = await Project.find({ project_id: { $in: projectIds } }).lean();
+  
+      // Create a lookup object for project names
+      const projectNames = {};
+      projects.forEach(project => {
+        projectNames[project.project_id] = project.project_name;
+      });
+    
+      const formattedBugs = bugs.map((bug) => ({
+        bug_id: bug.bug_id,
+        bug_name: bug.bug_name,
+        project_name: projectNames[Number(bug.project_id)] || "Unknown Project",
+        assigned_to: bug.assigned_to,
+        bug_status: bug.bug_status,
+        priority: bug.priority,
+        due:bug.due
+      }));
+  
+      res.json(formattedBugs);
+    } catch (error) {
+      console.error("Error fetching bugs:", error);
+      res.status(500).json({ message: "Server error" });
+    }
+    } );
+
+app.get("/api/tester/projects", async (req, res) => {
+    try {
+        const testerId = 1;
+        if (isNaN(testerId)||!testerId) {
+            return res.status(404).json({ error: "Tester not found" });
+        }
+        // Find all bugs reported by this tester
+        const bugs = await Bug.find({ reported_by: testerId});
+        console.log("Bugs found:", bugs); // Debugging log
+        if (bugs.length === 0) {
+            return res.json({ projects: [] }); // No projects found if no bugs exist
+        }
+        // Extract unique project IDs
+        const projectIds = [...new Set(bugs.map(bug => bug.project_id))];
+        
+        // Fetch project details
+        const projects = await Project.find({ project_id: { $in: projectIds } }, "project_id project_name");
+        console.log("Projects found:", projects); 
+        // Format response
+        const projectData = projects.map(project => ({
+            id: project.project_id,
+            name: project.project_name
+        }));
+
+        res.json({ projects: projectData });
+    } catch (error) {
+        console.error("Error fetching tester's projects:", error);
+        res.status(500).json({ error: "Server error" });
+    }
+});
+//testers verify bugs extraction
+app.get("/api/resolved/:testerId", async (req, res) => {
+    try {
+        const testerId = parseInt(req.params.testerId);
+        console.log("Received request for testerId:", testerId);
+
+        if (isNaN(testerId)) {
+            console.error("Invalid tester ID received");
+            return res.status(400).json({ error: "Invalid tester ID" });
+        }
+
+        // Fetch tester details
+        const tester = await Tester.findOne({ tester_id: testerId });
+        if (!tester) {
+            console.log("Tester not found");
+            return res.status(404).json({ error: "Tester not found" });
+        }
+        console.log("Tester found:", tester);
+
+        // Fetch all resolved bugs reported by the tester
+        const resolvedBugs = await Bug.find({ bug_status: "Resolved", reported_by: testerId });
+
+        if (!resolvedBugs || resolvedBugs.length === 0) {
+            console.log("No resolved bugs found for this tester");
+            return res.status(404).json({ message: "No resolved bugs reported by this tester", tester_name: tester.tester_name });
+        }
+
+        console.log("Resolved bugs found:", resolvedBugs);
+
+        // Extract unique project IDs and developer IDs
+        const projectIds = [...new Set(resolvedBugs.map(bug => bug.project_id).filter(id => id))];
+        const developerIds = [...new Set(resolvedBugs.map(bug => bug.assigned_to).filter(id => id))];
+
+        console.log("Unique project IDs:", projectIds);
+        console.log("Unique developer IDs:", developerIds);
+
+        // Fetch all projects in a single query
+        const projects = await Project.find({ project_id: { $in: projectIds } });
+        const developers = await Developer.find({ developer_id: { $in: developerIds } });
+
+        // Create lookup dictionaries
+        const projectMap = {};
+        projects.forEach(project => {
+            projectMap[project.project_id] = project.project_name;
+        });
+
+        const developerMap = {};
+        developers.forEach(dev => {
+            developerMap[dev.developer_id] = dev.developer_name;
+        });
+
+        console.log("Project mapping:", projectMap);
+        console.log("Developer mapping:", developerMap);
+
+        // Attach project names and developer names to bugs
+        const bugsWithDetails = resolvedBugs.map(bug => ({
+            bug_id: bug.bug_id,
+            bug_name: bug.bug_name,
+            project_name: projectMap[bug.project_id] || "N/A",
+            assigned_to: developerMap[bug.assigned_to] || "Unknown Developer",  // 🔥 FIX: This now fetches Developer Name!
+            bug_status: bug.bug_status,
+            priority: bug.priority,
+            resolved_at: bug.resolved_at,
+        }));
+
+        console.log("Final response data:", {bugs: bugsWithDetails });
+        res.json({ bugs: bugsWithDetails });
+    } catch (err) {
+        console.error("Error fetching bugs:", err.message);
+        res.status(500).json({ error: "Internal Server Error", details: err.message });
+    }
+});
+//tester verify bug details api
+app.get("/api/verifybugs/:bugId", async (req, res) => {
+    try {
+      const bugId = parseInt(req.params.bugId);
+      if (isNaN(bugId)) {
+        return res.status(400).json({ message: "Invalid bug ID" });
+      }
+  
+      // Fetch the bug details
+      const bug = await Bug.findOne({ bug_id: bugId });
+  
+      if (!bug) {
+        return res.status(404).json({ message: "Bug not found" });
+      }
+  
+      // Fetch project details
+      const project = await Project.findOne({ project_id: bug.project_id });
+      const projectName = project ? project.project_name : "N/A";
+  
+      // Fetch developer details
+      const developer = await Developer.findOne({ developer_id: bug.assigned_to });
+      const developerName = developer ? developer.developer_name : "Unknown Developer";
+  
+      // Construct the response object
+      const bugDetails = {
+        bug_id: bug.bug_id,
+        bug_name: bug.bug_name,
+        project_name: projectName,
+        assigned_to: developerName,
+        bug_status: bug.bug_status,
+        priority: bug.priority,
+        resolved_at: bug.resolved_at,
+      };
+  
+      res.json({ bug: bugDetails });
+    } catch (error) {
+      console.error("Error fetching bug details:", error.message);
+      res.status(500).json({ message: "Internal Server Error", details: error.message });
+    }
+  });
+  //tester verify bug update status
+  app.patch("/api/bugs/:bugId/update-status", async (req, res) => {
+    try {
+      const bugId = parseInt(req.params.bugId);
+      const { newStatus } = req.body; // Expecting "Verified" or "Reopen"
+  
+      if (isNaN(bugId)) {
+        return res.status(400).json({ message: "Invalid bug ID" });
+      }
+  
+      if (!["Verified", "Reopen"].includes(newStatus)) {
+        return res.status(400).json({ message: "Invalid status update" });
+      }
+  
+      // Update the bug status
+      const updatedBug = await Bug.findOneAndUpdate(
+        { bug_id: bugId },
+        { $set: { bug_status: newStatus } },
+        { new: true }
+      );
+  
+      if (!updatedBug) {
+        return res.status(404).json({ message: "Bug not found" });
+      }
+  
+      res.json({ message: `Bug status updated to ${newStatus}`, bug: updatedBug });
+    } catch (error) {
+      console.error("Error updating bug status:", error.message);
+      res.status(500).json({ message: "Internal Server Error", details: error.message });
+    }
+  });
+  //proj manager track bugs
+  app.get("/api/bugs/projmanager/:projectManagerId", async (req, res) => {
+    try {
+        const projectManagerId = parseInt(req.params.projectManagerId);
+
+        if (isNaN(projectManagerId)) {
+            return res.status(400).json({ message: "Invalid Project Manager ID" });
+        }
+
+        // 🔹 Fetch Project Manager details correctly
+        const projectManager = await ProjectManager.findOne({ manager_id: projectManagerId });
+
+        if (!projectManager || !projectManager.project_id.length) {
+            return res.status(404).json({ message: "No projects found for this Project Manager" });
+        }
+
+        const projectIds = projectManager.project_id; // This is an array of project IDs
+
+        // 🔹 Fetch all bugs related to these projects
+        const bugs = await Bug.find({ project_id: { $in: projectIds } });
+
+        if (!bugs.length) {
+            return res.status(404).json({ message: "No bugs found for these projects" });
+        }
+
+        // 🔹 Fetch additional details for each bug
+        const detailedBugs = await Promise.all(
+            bugs.map(async (bug) => {
+                if (!bug.bug_id || isNaN(bug.bug_id)) {
+                    console.error("Invalid bug ID found:", bug);
+                    return null; // Skip invalid bugs
+                }
+
+                const project = await Project.findOne({ project_id: bug.project_id });
+                const tester = await Tester.findOne({ tester_id: bug.reported_by });
+                // Fetch developer details
+                const developer = await Developer.findOne({ developer_id: bug.assigned_to });
+                const developerName = developer ? developer.developer_name : "Unknown Developer";
+                console.log("Developer Found:", developer);
+
+                return {
+                    bug_id: Number(bug.bug_id), // Ensure it's a number
+                    bug_name: bug.bug_name,
+                    project_name: project ? project.project_name : "N/A",
+                    bug_status: bug.bug_status,
+                    priority: bug.priority,
+                    due: bug.due || "No Due Date",
+                    resolved_at: bug.resolved_at || "Not Resolved",
+                    assigned_to: developerName,
+                    tester_name: tester ? tester.tester_name : "Unknown Tester",
+                };
+            })
+        );
+
+        res.status(200).json(detailedBugs.filter((bug) => bug !== null));
+    } catch (error) {
+        console.error("Error fetching bugs:", error);
+        res.status(500).json({ message: "Server error while fetching bugs", error: error.message });
+    }
+});
+// Get details of a specific bug for manager
+app.get("/api/bugsM/:bugId", async (req, res) => {
+    try {
+        const bugId = Number(req.params.bugId); // Convert to number
+        if (isNaN(bugId)) {
+            return res.status(400).json({ error: "Invalid bug ID" });
+        }
+
+        // 🔹 Fetch bug details
+        const bug = await Bug.findOne({ bug_id: bugId });
+
+        if (!bug) {
+            return res.status(404).json({ error: "Bug not found" });
+        }
+
+        // 🔹 Fetch project details
+        const project = await Project.findOne({ project_id: bug.project_id });
+
+        // 🔹 Fetch assigned developer details
+        const developer = await Developer.findOne({ developer_id: bug.assigned_to });
+
+        // 🔹 Fetch tester details
+        const tester = await Tester.findOne({ tester_id: bug.reported_by });
+
+        // 🔹 Prepare the response object
+        const bugDetails = {
+            bug_id: bug.bug_id,
+            bug_name: bug.bug_name,
+            project_id: bug.project_id,
+            project_name: project ? project.project_name : "Unknown Project",
+            bug_status: bug.bug_status,
+            priority: bug.priority,
+            due: bug.due || "No Due Date",
+            resolved_at: bug.resolved_at || "Not Resolved",
+            assigned_to: developer ? developer.developer_name : "Unassigned",
+            description: bug.description || "No description available",
+            severity: bug.severity || "Unknown",
+            reported_by: tester ? tester.tester_name : "Unknown Tester",
+        };
+        console.log(bugDetails);
+        res.status(200).json(bugDetails);
+    } catch (error) {
+        console.error("Error fetching bug details:", error);
+        res.status(500).json({ error: "Server error" });
+    }
+});
+
+//stuck bugs
+app.put("/api/bugsM/:bugId/update", async (req, res) => {
+    try {
+      const bugId = Number(req.params.bugId);
+      if (isNaN(bugId)) {
+        return res.status(400).json({ error: "Invalid bug ID" });
+      }
+  
+      const { dueDate, assignedTo } = req.body;
+      const updatedBug = await Bug.findOneAndUpdate(
+        { bug_id: bugId }, 
+        { due: dueDate, assigned_to: assignedTo,bug_status: "Reopen" }, 
+        { new: true }
+      );
+  
+      if (!updatedBug) {
+        return res.status(404).json({ error: "Bug not found" });
+      }
+  
+      res.json({ message: "Bug updated successfully!", updatedBug });
+    } catch (error) {
+      console.error("Error updating bug:", error);
+      res.status(500).json({ error: "Server error" });
+    }
+  });
+//fetch dev names for stuck bugs
+app.get("/api/projects/:projectId/developers", async (req, res) => {
+    const projectId = req.params.projectId;
+    try {
+      const developers = await Developer.find({ project_id: projectId });
+      res.json(developers);
+    } catch (error) {
+      res.status(500).json({ error: "Error fetching developers" });
+    }
+  });  
+  
+//admin managerusers
+app.get("/api/users/:adminId", async (req, res) => {
+    try {
+        console.log("Raw Admin ID from request:", req.params.adminId);
+        const adminId = Number(req.params.adminId);
+        console.log("Admin ID received:", adminId);
+
+        // Find the admin and get company_id
+        const admin = await Admin.findOne({ admin_id: adminId });
+        if (!admin) {
+            return res.status(404).json({ message: "Admin not found" });
+        }
+
+        const companyId = admin.company_id;
+
+        // Fetch all users belonging to the same company
+        const projectManagers = await ProjectManager.find({ company_id: companyId })
+            .select("manager_id manager_name");
+
+        const testers = await Tester.find({ company_id: companyId })
+            .select("tester_id tester_name");
+
+        const developers = await Developer.find({ company_id: companyId })
+            .select("developer_id developer_name");
+
+        // Format the response with IDs
+        const users = [
+            ...projectManagers.map(user => ({
+                id: user.manager_id||user.id, // Include the user ID
+                name: user.manager_name,
+                role: "Project Manager"
+            })),
+            ...testers.map(user => ({
+                id: user.tester_id, // Include the user ID
+                name: user.tester_name,
+                role: "Tester"
+            })),
+            ...developers.map(user => ({
+                id: user.developer_id, // Include the user ID
+                name: user.developer_name,
+                role: "Developer"
+            }))
+        ];
+        
+        res.json(users);
+    } catch (error) {
+        console.error("Error fetching users:", error);
+        res.status(500).json({ message: "Server error" });
+    }
+});
+//to delete users in admin manage users
+app.delete("/api/users/:userId", async (req, res) => {
+    try {
+      const userId= Number(req.params.userId);
+      const { role } = req.query;
+  
+      let deletedUser;
+  
+      if (role === "Developer") {
+        deletedUser = await Developer.findOneAndDelete({ developer_id: userId });
+      } else if (role === "Tester") {
+        deletedUser = await Tester.findOneAndDelete({ tester_id: userId });
+      } else if (role === "Project Manager") {
+        deletedUser = await ProjectManager.findOneAndDelete({ manager_id: userId });
+      } else {
+        return res.status(400).json({ message: "Invalid role" });
+      }
+  
+      if (!deletedUser) {
+        return res.status(404).json({ message: "User not found" });
+      }
+  
+      res.json({ message: "User deleted successfully" });
+    } catch (error) {
+      console.error("Error deleting user:", error);
+      res.status(500).json({ message: "Server error" });
+    }
+  });
+//Manage users in admin view button
+app.get("/api/user/:id", async (req, res) => {
+    const userId = Number(req.params.id); // ✅ Convert id to number
+    const { role } = req.query; 
+
+    try {
+        let user;
+
+        if (role === "Developer") {
+            user = await Developer.aggregate([
+                { $match: { developer_id: userId } },
+                {
+                    $lookup: {
+                        from: "projects", // ✅ Your Project collection name (check your DB)
+                        localField: "project_id",
+                        foreignField: "project_id",
+                        as: "projectDetails"
+                    }
+                }
+            ]);
+        } else if (role === "Tester") {
+            user = await Tester.aggregate([
+                { $match: { tester_id: userId } },
+                {
+                    $lookup: {
+                        from: "projects",
+                        localField: "project_id",
+                        foreignField: "project_id",
+                        as: "projectDetails"
+                    }
+                }
+            ]);
+        } else if (role === "Project Manager") {
+            user = await ProjectManager.aggregate([
+                { $match: { manager_id: userId } },
+                {
+                    $lookup: {
+                        from: "projects",
+                        localField: "project_id",
+                        foreignField: "project_id",
+                        as: "projectDetails"
+                    }
+                }
+            ]);
+        }
+
+        if (!user || user.length === 0) {
+            return res.status(404).json({ message: "User not found" });
+        }
+
+        // Extract user details
+        const userData = user[0]; // Since aggregate returns an array
+
+        res.json({
+            name: userData.developer_name || userData.tester_name || userData.manager_name,
+            email: userData.email,
+            role,
+            project_names: userData.projectDetails.length > 0 
+                ? userData.projectDetails.map(project => project.project_name) 
+                : ["Not Assigned"], // ✅ Return all project names as an array
+        });
+
+    } catch (error) {
+        console.error("Error fetching user:", error);
+        res.status(500).json({ message: "Server error", error });
+    }
+});
+
+  
+app.get("/api/projects/:projectId/developers", async (req, res) => {
+    try {
+        const { projectId } = req.params;
+
+        // Find all developers assigned to this project
+        const developers = await Developer.find({ project_id: projectId });
+
+        if (!developers.length) {
+            return res.status(404).json({ message: "No developers found for this project" });
+        }
+
+        res.json({ developers });
+    } catch (error) {
+        console.error("Error fetching developers:", error);
+        res.status(500).json({ message: "Server error" });
+    }
+});
+
+/* Fetch Tester Profile
+app.get("/api/tester/profile", async (req, res) => {
+    try {
+        const tester = await Tester.findById(req.user.id); // Get tester from DB
+
+        if (!tester) {
+            return res.status(404).json({ error: "Tester not found" });
+        }
+
+        res.json({ testerId: tester._id, name: tester.name, email: tester.email }); // Return tester info
+    } catch (error) {
+        console.error("Error fetching tester profile:", error);
+        res.status(500).json({ error: "Server error" });
+    }
+});*/
 app.post("/api/admin-signup", async (req, res) => {
     try {
         const { admin_name, email, password, company_name } = req.body;
@@ -344,6 +1054,7 @@ app.post("/api/auth/login", async (req, res) => {
         res.status(400).json({ error: error.message });
     }
 });
+
 
 // ✅ Test API Route
 app.get("/", (req, res) => {

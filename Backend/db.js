@@ -38,13 +38,14 @@ const projectSchema = new mongoose.Schema({
 
 const developerSchema = new mongoose.Schema({
     developer_id: { type: Number, required: true, unique: true },
-    project_id: { type: Number, ref: 'Project', required: true },
+    project_id: [{ type: Number, ref: 'Project', required: true }],
     company_id: { type: Number, ref: 'Company', required: true },
     developer_name: { type: String, required: true },
     email: { type: String, required: true, unique: true },
     password: { type: String, required: true },
     total_bugs_solved: { type: Number, default: 0 },
     success_rate: { type: Number, default: 0 },
+    bugs_assigned:[{type: Number, ref: 'Bug'}],
     solved_bugs: [{
         bug_id: { type: Number, ref: 'Bug' },
         bug_type: { type: String },
@@ -54,7 +55,7 @@ const developerSchema = new mongoose.Schema({
 
 const testerSchema = new mongoose.Schema({
     tester_id: { type: Number, required: true, unique: true },
-    project_id: { type: Number, ref: 'Project', required: true },
+    project_id: [{ type: Number, ref: 'Project', required: true }],
     company_id: { type: Number, ref: 'Company', required: true },
     tester_name: { type: String, required: true },
     total_bug_reported: { type: Number, default: 0 },
@@ -65,12 +66,12 @@ const testerSchema = new mongoose.Schema({
 });
 
 const bugSchema = new mongoose.Schema({
-    bug_id: { type: Number, required: true, unique: true },
+    bug_id: { type: Number, unique: true },
     project_id: { type: Number, ref: 'Project', required: true },
     bug_name: { type: String, required: true },
     bug_status: {
         type: String,
-        enum: ["Open", "In Progress", "Resolved", "Verified", "Reopen"],
+        enum: ["Open", "In Progress", "Resolved", "Verified", "Reopen","Stuck"],
         default: "Open"
     },
     bug_type: { type: String, required: true },
@@ -79,10 +80,13 @@ const bugSchema = new mongoose.Schema({
         enum: ["Low", "Medium", "High", "Critical"],
         default: "Medium"
     },
+    description: { type: String, required: true },
+    comments: { type: String },
     reported_by: { type: Number, ref: 'Tester', required: true },
-    assigned_to: { type: Number, ref: 'Developer' },
+    assigned_to: { type: Number, ref: 'Developer' , required: true },
     assigned_at: { type: Date },
     created_at: { type: Date, default: Date.now },
+    due: {type:Date},
     resolved_at: { type: Date },
     resolution_time: { type: Number }
 });
@@ -109,6 +113,7 @@ const chatroomSchema = new mongoose.Schema({
 });
 
 const projectManagerSchema = new mongoose.Schema({
+    manager_id:{type:Number,unique:true},
     project_id: [{ type: Number, ref: 'Project' }],
     company_id: { type: Number, ref: 'Company', required: true },
     manager_name: { type: String, required: true },
@@ -116,7 +121,16 @@ const projectManagerSchema = new mongoose.Schema({
     email: { type: String, required: true, unique: true },
     password: { type: String, required: true }
 });
-
+// Post-save hook to emit an event when a message is added
+/*chatroomSchema.post("findOneAndUpdate", function (doc) {
+    if (doc) {
+      const lastMessage = doc.messages[doc.messages.length - 1]; // Get the last message
+      if (lastMessage) {
+        global.io.to(`chatroom_${doc.chatroom_id}`).emit("newMessage", lastMessage);
+      }
+    }
+  }); */
+  
 // Create Mongoose Models
 const Company = mongoose.model('Company', companySchema);
 const Admin = mongoose.model('Admin', adminSchema);

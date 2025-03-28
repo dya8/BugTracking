@@ -1,31 +1,33 @@
-import React from "react";
+import React, { useState, useEffect } from "react";
 import { FaSearch } from "react-icons/fa";
 import { useNavigate } from "react-router-dom";
 import Sidebar from "./sidebar";
 import Navbar from "./navbar";
+
 const AssignedBugs = () => {
   const navigate = useNavigate();
+  const [bugs, setBugs] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
 
-  const bugs = [
-    {
-      id: 1,
-      name: "UI Button not clickable",
-      project: "Project Alpha",
-      status: "Open",
-      assignedBy: "John Doe",
-      priority: "High",
-      due: "In 2 hrs",
-    },
-    {
-      id: 2,
-      name: "Login API failing",
-      project: "Project Beta",
-      status: "In Progress",
-      assignedBy: "Jane Smith",
-      priority: "Medium",
-      due: "Tomorrow",
-    },
-  ];
+  useEffect(() => {
+    const fetchBugs = async () => {
+      try {
+        const response = await fetch("http://localhost:3000/api/bugs/assigned");
+        if (!response.ok) {
+          throw new Error("Failed to fetch assigned bugs");
+        }
+        const data = await response.json();
+        setBugs(data);
+      } catch (err) {
+        setError(err.message);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchBugs();
+  }, []);
 
   return (
     <div className="flex h-screen bg-gray-100">
@@ -42,41 +44,95 @@ const AssignedBugs = () => {
           </div>
 
           <div className="mt-4 bg-white rounded-lg shadow p-4">
-            <table className="w-full text-left border-collapse">
-              <thead>
-                <tr className="bg-purple-200 text-purple-800">
-                  <th className="p-3">Bug name</th>
-                  <th className="p-3">Project name</th>
-                  <th className="p-3">Bug status</th>
-                  <th className="p-3">Assigned by</th>
-                  <th className="p-3">Priority</th>
-                  <th className="p-3">Due</th>
-                </tr>
-              </thead>
-              <tbody>
-                {bugs.map((bug) => (
-                  <tr key={bug.id} className="border-t text-gray-700">
-                    <td className="p-3">{bug.name}</td>
-                    <td className="p-3">{bug.project}</td>
-                    <td className="p-3 text-purple-600 font-semibold">{bug.status}</td>
-                    <td className="p-3">{bug.assignedBy}</td>
-                    <td className="p-3">{bug.priority}</td>
-                    <td className="p-3">
-                      <button
-                        onClick={() => navigate(`/bug-details/${bug.id}`)}
-                        className="text-purple-700 font-semibold hover:underline flex items-center"
-                      >
-                        {bug.due} ➜
-                      </button>
-                    </td>
+            {loading ? (
+              <p className="text-gray-600">Loading...</p>
+            ) : error ? (
+              <p className="text-red-600">Error: {error}</p>
+            ) : (
+              <table className="w-full text-left border-collapse">
+                <thead>
+                  <tr className="bg-purple-200 text-purple-800">
+                    <th className="p-3">Bug name</th>
+                    <th className="p-3">Project name</th>
+                    <th className="p-3">Bug status</th>
+                    <th className="p-3">Assigned by</th>
+                    <th className="p-3">Priority</th>
+                    <th className="p-3">Due</th>
                   </tr>
-                ))}
-              </tbody>
-            </table>
+                </thead>
+                <tbody>
+                  {bugs.length > 0 ? (
+                    bugs.map((bug) => <BugRow key={bug.bug_id} bug={bug} />)
+                  ) : (
+                    <tr>
+                      <td colSpan="6" className="text-center p-3">
+                        No assigned bugs found
+                      </td>
+                    </tr>
+                  )}
+                </tbody>
+              </table>
+            )}
           </div>
         </div>
       </div>
     </div>
+  );
+};
+
+const BugRow = ({ bug }) => {
+  const navigate = useNavigate();
+  const [timeLeft, setTimeLeft] = useState("");
+
+  useEffect(() => {
+    if (!bug.due || isNaN(new Date(bug.due).getTime())) {
+      console.error("Invalid due date received:", bug.due); // Debugging
+      setTimeLeft("Invalid due date");
+      return;
+    }
+
+    const updateTimeLeft = () => {
+      const dueTime = new Date(bug.due).getTime();
+      const now = Date.now();
+      const remaining = dueTime - now;
+
+      if (remaining > 0) {
+        if (remaining < 60 * 1000) {
+          setTimeLeft(`Due in ${Math.floor(remaining / 1000)} seconds`);
+        } else if (remaining < 60 * 60 * 1000) {
+          setTimeLeft(`Due in ${Math.floor(remaining / (60 * 1000))} minutes`);
+        } else if (remaining < 24 * 60 * 60 * 1000) {
+          setTimeLeft(`Due in ${Math.floor(remaining / (60 * 60 * 1000))} hours`);
+        } else {
+          setTimeLeft(`Due in ${Math.floor(remaining / (24 * 60 * 60 * 1000))} days`);
+        }
+      } else {
+        setTimeLeft("Time Over! Bug Stuck");
+      }
+    };
+
+    updateTimeLeft();
+    const interval = setInterval(updateTimeLeft, 60000); // Update every minute
+
+    return () => clearInterval(interval);
+  }, [bug.due]);
+
+  return (
+    <tr className="border-t text-gray-700">
+      <td className="p-3">{bug.bug_name}</td>
+      <td className="p-3">{bug.project_name}</td>
+      <td className="p-3 text-purple-600 font-semibold">{bug.bug_status}</td>
+      <td className="p-3">{bug.assigned_by}</td>
+      <td className="p-3">{bug.priority}</td>
+      <td className="p-3">
+        <button
+          onClick={() => navigate(`/bug-details/${bug.bug_id}`)}
+          className="text-purple-700 font-semibold hover:underline flex items-center"
+        >
+          {timeLeft} ➜
+        </button>
+      </td>
+    </tr>
   );
 };
 
