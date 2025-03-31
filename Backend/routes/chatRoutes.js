@@ -1,6 +1,16 @@
 const express = require("express");
 const router = express.Router();
 const { Chatroom, Bug, Tester, Developer } = require("../db");
+const nodemailer = require("nodemailer");
+// 📩 Nodemailer Transporter Configuration
+const transporter = nodemailer.createTransport({
+    service: "gmail",
+    auth: {
+      user: "diyadileep0806@gmail.com", // Your email
+      pass:"djmm zavk kkxo pkik", // App password
+    },
+  });
+  
 
 // 📌 Get Testers Who Assigned Bugs to a Developer correct
 router.get("/testers/:developer_id", async (req, res) => {
@@ -32,7 +42,7 @@ router.get("/developers/:tester_id", async (req, res) => {
 
 router.post("/chatroom", async (req, res) => {
     try {
-        console.log("📩 Incoming request:", req.body);
+       console.log("📩 Incoming request:", req.body);
 
         const { developer_id, tester_id } = req.body;
         if (!developer_id || !tester_id) {
@@ -58,7 +68,7 @@ router.post("/chatroom", async (req, res) => {
             console.log("✅ New chatroom created:", chatroom);
             res.status(200).json({ chatroom_id: chatroom.chatroom_id, _id: chatroom._id }); // Send back chatroom_id
         } else {
-            console.log("🔄 Existing chatroom found:", chatroom);
+          //  console.log("🔄 Existing chatroom found:", chatroom);
             res.status(200).json({ chatroom_id: chatroom.chatroom_id, _id: chatroom._id }); // Send back chatroom_id
         }
 
@@ -106,11 +116,55 @@ router.post("/messages", async (req, res) => {
             message,
             timestamp: new Date()
         };
+       
 
         chatroom.messages.push(newMessage);
         await chatroom.save();
 
-        console.log("✅ Message stored successfully:", newMessage);
+      // console.log("✅ Message stored successfully:", newMessage);
+          console.log(newMessage.sender_id);       
+          console.log(newMessage.sender_type);        
+         // Fetch the recipient details (opposite of sender)
+         let recipient;
+         let recipientEmail;
+         let senderName;
+ 
+         if (sender_type.toLowerCase() === "developer") {
+            recipient = await Tester.findOne({ tester_id: chatroom.tester_id });
+            senderName = (await Developer.findOne({ developer_id: sender_id }))?.developer_name || "A Developer";
+        } else {
+            recipient = await Developer.findOne({ developer_id: chatroom.developer_id });
+            senderName = (await Tester.findOne({ tester_id: sender_id }))?.tester_name || "A Tester";
+        }
+
+        // Fetch recipient email
+        recipientEmail = recipient?.email || "studytec17@yahoo.com";
+
+        
+        
+        // 🛠 Debugging Logs:
+       console.log("📧 Recipient email:", recipientEmail);
+       console.log("💌 Sender name:", senderName);
+
+          // 📧 Email notification setup
+            const mailOptions = {
+                from: "diyadileep0806@yahoo.com", 
+                to: recipientEmail,
+                subject: `New Message from ${senderName}`,
+                text: `Hey, you have a new message from ${senderName}: "${message}"\n\nLogin to check your messages.`,
+            };
+
+         
+            // Send the email notification
+            transporter.sendMail(mailOptions, (error, info) => {
+                if (error) {
+                    console.error("❌ Error sending email:", error);
+                } else {
+                    console.log(`📧 Email sent to ${recipientEmail}: ${info.response}`);
+                }
+            });
+        
+
         res.status(200).json(newMessage);
 
          // Emit real-time event (ensure `global.io` exists)

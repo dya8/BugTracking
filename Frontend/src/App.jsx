@@ -41,6 +41,10 @@ import DevNotifications from './Pages/developer/Devnoti';
 import ManNotifications from './Pages/manager/Manoti';
 import TestNotifications from './Pages/tester/Notitester';
 import ViewUser from './Pages/admin/viewuser';
+import ProjectStats from './Pages/admin/ProjectStats';
+import ProjectStatsT from './Pages/tester/ProjectStatsT';
+import ProjectStatsD from './Pages/developer/ProjectStatsD';
+import ProjectStatsM from './Pages/manager/ProjectStatsM';
 function App() {
   
   return (
@@ -86,6 +90,10 @@ function App() {
       <Route path="/manotifications" element={<ManNotifications/>}/>
       <Route path="/testnotifications" element={<TestNotifications/>}/>
       <Route path="/view-user/:userId/:role" element={<ViewUser />} /> 
+      <Route path="/project-stats/:projectName" element={<ProjectStats />} />
+      <Route path="/project-statsT/:projectName" element={<ProjectStatsT />} />
+      <Route path="/project-statsD/:projectName" element={<ProjectStatsD />} />
+      <Route path="/project-statsM/:projectName" element={<ProjectStatsM />} />
      </Routes>
        </Router>
   )
