@@ -1,8 +1,54 @@
+import { useState, useEffect } from "react";
 import { FaUser, FaEdit, FaBell } from "react-icons/fa";
 import Navbar from "./navbar";
 import Sidebar from "./sidebar";
 
 export default function Settings() {
+  const [developer, setDeveloper] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const developerId = 1; // Replace with dynamic developer ID if needed
+
+  useEffect(() => {
+    const fetchDeveloperData = async () => {
+      try {
+        console.log("Fetching details for developer ID:", developerId);
+
+        const response = await fetch(`http://localhost:3000/api/developer/${developerId}`);
+        const data = await response.json();
+
+        if (response.ok) {
+          setDeveloper(data);
+        } else {
+          console.error("Failed to fetch developer data", data);
+        }
+      } catch (error) {
+        console.error("Error fetching developer details", error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchDeveloperData();
+  }, [developerId]);
+  const handleSave = async () => {
+    try {
+      const response = await fetch(`http://localhost:3000/api/developer/${developerId}`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email, password }),
+      });
+
+      if (response.ok) {
+        alert("Profile updated successfully");
+        setEditMode(false);
+      } else {
+        console.error("Failed to update profile");
+      }
+    } catch (error) {
+      console.error("Error updating profile", error);
+    }
+  };
+
   return (
     <div className="flex">
       {/* Sidebar */}
@@ -27,17 +73,57 @@ export default function Settings() {
                 My Profile <FaUser className="ml-2 text-purple-500" />
               </h3>
               <div className="mt-4 p-4 border rounded-lg bg-gray-50">
-                <p><strong>Name:</strong> John Doe</p>
-                <p><strong>Role:</strong> Manager</p>
-                <p><strong>Email:</strong> john@example.com</p>
-                <p><strong>Company Name:</strong> Tech Solutions</p>
-                <p><strong>Company Email:</strong> contact@techsolutions.com</p>
-                <p><strong>Change Password:</strong> ********</p>
+                {loading ? (
+                  <p>Loading...</p>
+                ) : developer ? (
+                  <>
+                    <p><strong>Name:</strong> {developer.name}</p>
+                    <p><strong>Role:</strong> {developer.role}</p>
+                    <p><strong>Email:</strong> {developer.email}</p>
+                    <p><strong>Company Name:</strong> {developer.companyName}</p>
+                    <p><strong>Company Email:</strong> {developer.companyEmail}</p>
+                    {editMode ? (
+                      <>
+                        <p><strong>Email:</strong></p>
+                        <input
+                          type="email"
+                          value={email}
+                          onChange={(e) => setEmail(e.target.value)}
+                          className="border p-2 w-full rounded-md"
+                        />
 
-                {/* Edit Button */}
-                <button className="mt-3 px-4 py-2 bg-purple-600 text-white rounded-lg flex items-center">
-                  <FaEdit className="mr-2" /> Edit
-                </button>
+                        <p className="mt-2"><strong>Change Password:</strong></p>
+                        <input
+                          type="password"
+                          value={password}
+                          onChange={(e) => setPassword(e.target.value)}
+                          className="border p-2 w-full rounded-md"
+                          placeholder="Enter new password"
+                        />
+
+                        <button
+                          onClick={handleSave}
+                          className="mt-3 px-4 py-2 bg-green-600 text-white rounded-lg flex items-center"
+                        >
+                          <FaSave className="mr-2" /> Save
+                        </button>
+                      </>
+                    ) : (
+                      <>
+                        <p><strong>Email:</strong> {developer.email}</p>
+                        <p><strong>Change Password:</strong> ********</p>
+                        <button
+                          onClick={() => setEditMode(true)}
+                          className="mt-3 px-4 py-2 bg-purple-600 text-white rounded-lg flex items-center"
+                        >
+                          <FaEdit className="mr-2" /> Edit
+                        </button>
+                      </>
+                    )}
+                  </>
+                ) : (
+                  <p className="text-red-500">Developer details not found</p>
+                )}
               </div>
             </div>
 
@@ -56,4 +142,4 @@ export default function Settings() {
       </div>
     </div>
   );
-}
+}      

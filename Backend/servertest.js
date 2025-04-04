@@ -49,6 +49,7 @@ const generateUniqueId = async (entity) => {
     return uniqueId;
 };
 
+
 //General login API
 app.post("/api/login", async (req, res) => {
     try {
@@ -342,6 +343,166 @@ app.post("/api/auth/login", async (req, res) => {
         res.status(200).json({ message: "Login Successful", token, user });
     } catch (error) {
         res.status(400).json({ error: error.message });
+    }
+});
+//project manager report bugs
+app.get("/api/bugs",async(req,res) => {
+    try{
+        const testerId = 1;
+        
+    if (!testerId) {
+        return res.status(400).json({ message: "Tester ID is required" });
+      }
+  
+      // Fetch all bugs reported by this tester
+      const bugs = await Bug.find({ reported_by: testerId });
+      const projectIds = [...new Set(bugs.map(bug => Number(bug.project_id)))]; // Unique project IDs
+      const projects = await Project.find({ project_id: { $in: projectIds } }).lean();
+  
+      // Create a lookup object for project names
+      const projectNames = {};
+      projects.forEach(project => {
+        projectNames[project.project_id] = project.project_name;
+      });
+    
+      const formattedBugs = bugs.map((bug) => ({
+        bug_id: bug.bug_id,
+        bug_name: bug.bug_name,
+        project_name: projectNames[Number(bug.project_id)] || "Unknown Project",
+        assigned_to: bug.assigned_to,
+        bug_status: bug.bug_status,
+        priority: bug.priority
+      }));
+  
+      res.json(formattedBugs);
+    } catch (error) {
+      console.error("Error fetching bugs:", error);
+      res.status(500).json({ message: "Server error" });
+    }
+    } );
+//Fetching users by manager
+app.get("/api/project-users/:managerId", async (req, res) => {
+    try {
+        console.log("Raw Manager ID from request:", req.params.managerId);
+        const managerId = Number(req.params.managerId);
+        console.log("Manager ID received:", managerId);
+
+        // Step 1: Find the Project IDs from the Project Manager Table
+        const projectManager = await ProjectManager.findOne({ manager_id: managerId });
+
+        if (!projectManager) {
+            return res.status(404).json({ message: "Project Manager not found" });
+        }
+
+        const projectIds = projectManager.project_id; // This is an array
+        console.log("Project IDs fetched:", projectIds);
+
+        // Step 2: Fetch Developers and Testers matching any of the Project IDs
+        const developers = await Developer.find({ project_id: { $in: projectIds } })
+            .select("developer_id developer_name");
+
+        const testers = await Tester.find({ project_id: { $in: projectIds } })
+            .select("tester_id tester_name");
+
+        // Step 3: Format the response
+        const users = [
+            ...developers.map(user => ({
+                id: user.developer_id,
+                name: user.developer_name,
+                role: "Developer"
+            })),
+            ...testers.map(user => ({
+                id: user.tester_id,
+                name: user.tester_name,
+                role: "Tester"
+            }))
+        ];
+
+        res.json(users);
+    } catch (error) {
+        console.error("Error fetching project users:", error);
+        res.status(500).json({ message: "Server error" });
+    }
+});
+//api to fetch developer and company details
+ app.get("/api/developer/:developerId", async (req, res) => {
+    try {
+        console.log("Fetching details for developer:", req.params.developerId);
+        const developerId = Number(req.params.developerId);
+
+        // Fetch developer details
+        const developer = await Developer.findOne({ developer_id: developerId });
+        if (!developer) {
+            return res.status(404).json({ message: "Developer not found" });
+        }
+
+        // Fetch company details
+        const company = await Company.findOne({ company_id: developer.company_id });
+        if (!company) {
+            return res.status(404).json({ message: "Company not found" });
+        }
+
+        // Response format
+        const responseData = {
+            name: developer.developer_name,
+            role: "Developer",
+            email:developer.developer_email,
+            companyName: company.company_name,
+            companyEmail:company.email
+        };
+
+        res.json(responseData);
+    } catch (error) {
+        console.error("Error fetching developer details:", error);
+        res.status(500).json({ message: "Server error" });
+    }
+}); 
+app.put("/api/developer/:developerId", async (req, res) => {
+    try {
+        console.log("Updating details for developer:", req.params.developerId);
+        const developerId = Number(req.params.developerId);
+        const { email, password } = req.body;
+
+        // Validate input
+        if (!email || !password) {
+            return res.status(400).json({ message: "Email and password are required" });
+        }
+
+        // Find developer
+        const developer = await Developer.findOne({ developer_id: developerId });
+        if (!developer) {
+            return res.status(404).json({ message: "Developer not found" });
+        }
+
+        // Update details
+        developer.developer_email = email;
+        developer.password = password; // Hash this in a real app for security
+        await developer.save();
+
+// Get manager details
+app.get("/api/manager/:id", (req, res) => {
+    const managerId = req.params.id;
+    const query = "SELECT * FROM manager WHERE id = ?";
+    db.query(query, [managerId], (err, result) => {
+        if (err) return res.status(500).json({ error: err.message });
+        if (result.length === 0) return res.status(404).json({ message: "Manager not found" });
+        res.json(result[0]);
+    });
+});
+
+// Get company details using company_id
+app.get("/api/company/:companyId", (req, res) => {
+    const companyId = req.params.companyId;
+    const query = "SELECT * FROM company WHERE id = ?";
+    db.query(query, [companyId], (err, result) => {
+        if (err) return res.status(500).json({ error: err.message });
+        if (result.length === 0) return res.status(404).json({ message: "Company not found" });
+        res.json(result[0]);
+    });
+});        res.json({ message: "Profile updated successfully" });
+    } catch (error) {
+        console.error("Error updating developer details:", error);
+        res.status(500).json({ message: "Server error" });
     }
 });
 

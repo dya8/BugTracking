@@ -1,15 +1,40 @@
-import React, { useState } from "react";
+import React, { useState ,useEffect} from "react";
 import Sidebar from "./Sidebar";
 import Navbar from "./Navbar";
+import { Input } from "@/components/ui/input";
+import { Card, CardContent } from "@/components/ui/card";
 
-export default function ReporteddBugs() {
-  // Sample reported bug data
-  const [bugs] = useState([
-    { id: 1, name: "Login Issue", project: "Website", assigned: "Dev A", status: "Open", priority: "High", due: "March 15" },
-    { id: 2, name: "Page Crash", project: "Mobile App", assigned: "Dev B", status: "In Progress", priority: "Medium", due: "March 18" },
-    { id: 3, name: "UI Glitch", project: "Dashboard", assigned: "Dev C", status: "Resolved", priority: "Low", due: "March 20" },
-    { id: 4, name: "API Timeout", project: "Backend", assigned: "Dev D", status: "Open", priority: "High", due: "March 22" }
-  ]);
+export default function ReportBugss() {
+    const [bugs, setBugs] = useState([]);
+    const [loading, setLoading] = useState(true);
+    const [error, setError] = useState(null);
+    const [search, setSearch] = useState("");
+
+   
+  const developerId = 1; // Assume project manager ID is available (Make it dynamic if needed)
+
+  useEffect(() => {
+    const fetchBugs = async () => {
+      try {
+        const response = await fetch(`http://localhost:3000/api/bugs?developerId=${developerId}`);
+        if (!response.ok) {
+          throw new Error("Failed to fetch bugs");
+        }
+        const data = await response.json();
+        setBugs(data);
+      } catch (err) {
+        setError(err.message);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchBugs();
+  }, []);
+
+  const filteredBugs = bugs.filter((bug) =>
+    bug.bug_name.toLowerCase().includes(search.toLowerCase())
+  );
 
   return (
     <div className="flex h-screen">
@@ -33,22 +58,25 @@ export default function ReporteddBugs() {
                 <tr>
                   <th className="p-3">Bug Name</th>
                   <th className="p-3">Project Name</th>
-                  <th className="p-3">Assigned To</th>
+                  <th className="p-3">Assigned On</th>
                   <th className="p-3">Bug Status</th>
                   <th className="p-3">Priority</th>
                   <th className="p-3">Due</th>
                 </tr>
               </thead>
               <tbody>
-                {bugs.length > 0 ? (
-                  bugs.map((bug) => (
-                    <tr key={bug.id} className="border-b hover:bg-gray-100">
-                      <td className="p-3">{bug.name}</td>
-                      <td className="p-3">{bug.project}</td>
-                      <td className="p-3">{bug.assigned}</td>
-                      <td className="p-3">{bug.status}</td>
-                      <td className="p-3">{bug.priority}</td>
-                      <td className="p-3">{bug.due}</td>
+              {filteredBugs.length > 0 ? (
+                        filteredBugs.map((bug) => (
+                          <tr
+                            key={bug.bug_id}
+                            className="border-b hover:bg-gray-100"
+                          >
+                            <td className="p-3">{bug.bug_name}</td>
+                            <td className="p-3">{bug.project_name}</td>
+                            <td className="p-3">{bug.assigned_to}</td>
+                            <td className="p-3">{bug.bug_status}</td>
+                            <td className="p-3">{bug.priority}</td>
+                            <td className="p-3 text-gray-400">N/A</td>
                     </tr>
                   ))
                 ) : (
@@ -73,6 +101,6 @@ export default function ReporteddBugs() {
           </div>
         </div>
       </div>
-    </div>
-  );
+    </div>
+  );
 }

@@ -1,50 +1,74 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent } from "@/components/ui/card";
 import { Plus, Trash } from "lucide-react";
 import Sidebar from "./Sidebar"; 
 import { FaSearch, FaBell, FaUser } from "react-icons/fa"; 
-import { useNavigate } from "react-router-dom";  // ✅ Import useNavigate
+import { useNavigate } from "react-router-dom"; 
 
 export default function ManageUsers() {
   const [users, setUsers] = useState([{ email: "", role: "" }]);
-  const [addedUsers, setAddedUsers] = useState([]);
-  const [showPopup, setShowPopup] = useState(false);
+  const [fetchedUsers, setFetchedUsers] = useState([]);
+  const [loading, setLoading] = useState(false);
+  const managerId = 1; // Replace with dynamic manager ID if needed
+  const navigate = useNavigate();
 
-  const navigate = useNavigate(); // ✅ Initialize navigate
+  useEffect(() => {
+    const fetchProjectUsers = async () => {
+      setLoading(true);
+      try {
+        console.log("Fetching project_id for manager_id:", managerId);
 
-  const handleInputChange = (index, field, value) => {
-    const newUsers = [...users];
-    newUsers[index][field] = value;
-    setUsers(newUsers);
-  };
+        // Step 1: Get project_id from the Manager table
+        const projectResponse = await fetch(`http://localhost:3000/api/manager/${managerId}`);
+        const projectData = await projectResponse.json();
 
-  const addUserField = () => {
-    setUsers([...users, { email: "", role: "" }]);
-  };
+        if (!projectResponse.ok || !projectData.project_id) {
+          console.error("Failed to fetch project_id", projectData);
+          setLoading(false);
+          return;
+        }
 
-  const removeUserField = (index) => {
-    setUsers(users.filter((_, i) => i !== index));
-  };
+        const projectId = projectData.project_id;
+        console.log("Fetched project_id:", projectId);
 
-  const confirmUsers = () => {
-    const validUsers = users.filter(user => user.email && user.role);
-    if (validUsers.length > 0) {
-      setAddedUsers([...addedUsers, ...validUsers]);
-    }
-    setUsers([{ email: "", role: "" }]);
-    setShowPopup(false);
-  };
+        // Step 2: Fetch developers and testers using project_id
+        const devResponse = await fetch(`http://localhost:3000/api/developers?project_id=${projectId}`);
+        const testerResponse = await fetch(`http://localhost:3000/api/testers?project_id=${projectId}`);
+        
+        const devData = await devResponse.json();
+        const testerData = await testerResponse.json();
+
+        console.log("Fetched Developers:", devData);
+        console.log("Fetched Testers:", testerData);
+
+        if (devResponse.ok && testerResponse.ok) {
+          const formattedUsers = [...devData, ...testerData].map(user => ({
+            id: user.id, 
+            name: user.name, 
+            role: user.role
+          }));
+          setFetchedUsers(formattedUsers);
+        } else {
+          console.error("Unexpected data format", devData, testerData);
+          setFetchedUsers([]);
+        }
+      } catch (error) {
+        console.error("Error fetching users", error);
+        setFetchedUsers([]);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchProjectUsers();
+  }, [managerId]);
 
   return (
     <div className="flex h-screen">
       <Sidebar />
-
-      {/* Main Content */}
       <div className="flex-1 flex flex-col bg-gray-100">
-        
-        {/* Navbar */}
         <div className="flex justify-between items-center p-4 bg-white shadow-md">
           <div className="flex items-center space-x-4">
             <div className="relative">
@@ -55,12 +79,7 @@ export default function ManageUsers() {
                 className="pl-8 pr-2 py-1 border rounded-md"
               />
             </div>
-
-            {/* Notifications and User */}
-            <FaBell 
-              className="text-purple-700 cursor-pointer" 
-              onClick={() => navigate("/notifications")} // ✅ Fix: Navigate on click
-            />
+            <FaBell className="text-purple-700 cursor-pointer" onClick={() => navigate("/notifications")} />
             <div className="flex items-center space-x-2 text-purple-700 cursor-pointer">
               <span>Admin</span>
               <FaUser className="text-purple-700" />
@@ -71,77 +90,34 @@ export default function ManageUsers() {
         <div className="p-5">
           <header className="flex justify-between items-center bg-white p-3 shadow-md rounded-lg">
             <h2 className="text-lg font-semibold">Manage Users</h2>
-            <button
-              className="flex items-center gap-2 bg-purple-600 text-white px-3 py-2 rounded-md"
-              onClick={() => setShowPopup(true)}
-            >
-              Add user <Plus className="w-4 h-4" />
-            </button>
           </header>
 
-          {/* Display Added Users */}
           <div className="mt-5 bg-white p-4 shadow rounded-lg">
-            <h2 className="text-lg font-semibold mb-3">Users</h2>
-            {addedUsers.length === 0 ? (
-              <p className="text-gray-500">No users added yet.</p>
+            <h2 className="text-lg font-semibold mb-3">Project Users</h2>
+            {loading ? (
+              <p className="text-gray-500">Loading users...</p>
+            ) : fetchedUsers.length === 0 ? (
+              <p className="text-gray-500">No users found.</p>
             ) : (
-              <ul>
-                {addedUsers.map((user, index) => (
-                  <li key={index} className="border-b py-2 flex justify-between">
-                    <span>{user.email} - {user.role}</span>
-                  </li>
-                ))}
-              </ul>
+              <table className="min-w-full border border-gray-300">
+                <thead className="bg-purple-200">
+                  <tr>
+                    <th className="p-3 border">User Name</th>
+                    <th className="p-3 border">Role</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {fetchedUsers.map((user, index) => (
+                    <tr key={index} className="border-b hover:bg-gray-100">
+                      <td className="p-3 border">{user.name}</td>
+                      <td className="p-3 border">{user.role}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
             )}
           </div>
         </div>
-
-        {/* Add Users Popup */}
-        {showPopup && (
-          <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50">
-            <Card className="w-[400px] shadow-lg rounded-xl bg-white">
-              <CardContent className="p-5">
-                <h2 className="text-xl font-semibold mb-4">Add Users</h2>
-                <p className="text-sm text-gray-600 mb-3">Invite by mail</p>
-                {users.map((user, index) => (
-                  <div key={index} className="flex gap-2 mb-2 items-center">
-                    <Input
-                      type="email"
-                      placeholder="Enter email"
-                      value={user.email}
-                      onChange={(e) => handleInputChange(index, "email", e.target.value)}
-                      className="flex-1"
-                    />
-                    <select
-                      value={user.role}
-                      onChange={(e) => handleInputChange(index, "role", e.target.value)}
-                      className="flex-1 border rounded px-2 py-1 bg-white"
-                    >
-                      <option value="">Select Role</option>
-                      <option value="Developer">Developer</option>
-                      <option value="Tester">Tester</option>
-                      <option value="Manager">Project Manager</option>
-                    </select>
-                    <button onClick={() => removeUserField(index)} className="text-red-500">
-                      <Trash className="w-5 h-5" />
-                    </button>
-                  </div>
-                ))}
-                <Button variant="outline" className="w-full mb-3" onClick={addUserField}>
-                  <Plus className="w-4 h-4 mr-1" /> Add another
-                </Button>
-                <div className="flex justify-between">
-                  <Button className="bg-red-500 text-white hover:bg-red-500" onClick={() => setShowPopup(false)}>
-                    Cancel
-                  </Button>
-                  <Button className="bg-purple-600 text-white hover:bg-purple-700" onClick={confirmUsers}>
-                    Confirm
-                  </Button>
-                </div>
-              </CardContent>
-            </Card>
-          </div>
-        )}
       </div>
     </div>
   );
