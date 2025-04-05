@@ -6,6 +6,7 @@ const { connectDB, Company, Admin, Project, Developer, Tester, Bug, Chatroom, Pr
 const chatRoutes = require("./routes/chatRoutes");
 const {setupChatSocket} = require("./sockets/chatSocket");
 const { Server } = require("socket.io");
+const axios = require("axios");
 
 const app = express();
 app.use(express.urlencoded({ extended: true }));
@@ -640,7 +641,6 @@ app.get("/api/bugsM/:bugId", async (req, res) => {
             resolved_at: bug.resolved_at || "Not Resolved",
             assigned_to: developer ? developer.developer_name : "Unassigned",
             description: bug.description || "No description available",
-            severity: bug.severity || "Unknown",
             reported_by: tester ? tester.tester_name : "Unknown Tester",
         };
         console.log(bugDetails);
@@ -834,7 +834,7 @@ app.get("/api/user/:id", async (req, res) => {
 });
 
   
-app.get("/api/projects/:projectId/developers", async (req, res) => {
+app.get("/api/projectss/:projectId/developers", async (req, res) => {
     try {
         const { projectId } = req.params;
 
@@ -1054,9 +1054,55 @@ app.post("/api/auth/login", async (req, res) => {
         res.status(400).json({ error: error.message });
     }
 });
-
-
-// ✅ Test API Route
+//ml
+// POST /api/ml/recommend
+app.post("/recommend", async (req, res) => {
+    try {
+      const { project_id, bug_type, priority } = req.body;
+  
+      // 1. Fetch all developers for this project
+      const developers = await Developer.find({ project_id });
+  
+      const priorityMap = { Low: 0, Medium: 1, High: 2, Critical: 3 };
+      const bugTypeMap = { UI: 4, Performance: 1, Backend: 0 };
+  
+      const encodedBugType = bugTypeMap[bug_type] ?? 5;
+      const encodedPriority = priorityMap[priority] ?? 1;
+  
+      // 2. Calculate stats for each developer
+      const candidates = await Promise.all(
+        developers.map(async (dev) => {
+          const pastBugs = await Bug.find({ assigned_to: dev.developer_id });
+  
+          const avgResTime = pastBugs.length > 0
+            ? pastBugs.reduce((sum, b) => sum + (b.resolution_time || 0), 0) / pastBugs.length
+            : 10;
+  
+          return {
+            developer_id: dev.developer_id,
+            features: {
+              bug_type: encodedBugType,
+              priority: encodedPriority,
+              resolution_time: 10, // default for prediction
+              dev_avg_res_time: avgResTime,
+              dev_total_fixes: pastBugs.length || 1
+            }
+          };
+        })
+      );
+  
+      // 3. Send to ML model
+      const mlResponse = await axios.post("https://20cb-35-221-185-202.ngrok-free.app/predict", {
+        candidates
+      });
+      
+  
+      res.json({ recommended_developer: mlResponse.data.recommended_developer });
+    } catch (err) {
+      console.error("ML Recommendation error:", err);
+      res.status(500).json({ error: "Failed to recommend developer" });
+    }
+  });
 app.get("/", (req, res) => {
     res.send("Bug Tracking API is running 🚀");
 });

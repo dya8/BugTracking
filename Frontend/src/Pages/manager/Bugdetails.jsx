@@ -2,6 +2,10 @@ import React, { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import Sidebar from "./Sidebar";
 import Navbar from "./Navbar";
+import axios from "axios";
+import DatePicker from "react-datepicker";
+import "react-datepicker/dist/react-datepicker.css";
+import {Tooltip,Button} from "@mui/material";
 
 const BugDetailsM = () => {
   const { id } = useParams();
@@ -11,6 +15,7 @@ const BugDetailsM = () => {
   const [developers, setDevelopers] = useState([]); // Store developers list
   const [selectedDeveloper, setSelectedDeveloper] = useState("");
   const [dueDate, setDueDate] = useState("");
+  const [isSameDeveloper, setIsSameDeveloper] = useState(false); // NEW
 
   useEffect(() => {
     // Fetch bug details
@@ -71,7 +76,31 @@ const BugDetailsM = () => {
       })
       .catch((err) => console.error("Error updating bug:", err));
   };
+  const handleRecommend = async () => {
+    try {
+      const res = await axios.post("http://localhost:3000/recommend", {
+        project_id: bug.project_id,
+        bug_type: bug.bug_type,
+        priority: bug.priority
+      });
+  
+      const recommendedDevId = String(res.data.recommended_developer);
+      setSelectedDeveloper(recommendedDevId);
+      
+      const dev = developers.find((d) => String(d.developer_id) === recommendedDevId);
+const devName = dev ? dev.developer_name : `Developer ID ${recommendedDevId}`;
+const currentDev = developers.find((d) => d.developer_name === bug.assigned_to);
+const currentDevId = currentDev ? String(currentDev.developer_id) : "";
 
+setIsSameDeveloper(currentDevId === recommendedDevId);
+
+      alert(`🔮 Recommended Developer: ${devName}`);
+    } catch (error) {
+      console.error("Recommendation error:", error);
+      alert("❌ Failed to get recommendation.");
+    }
+  };
+  
   return (
     <div className="flex min-h-screen">
       <Sidebar />
@@ -97,26 +126,110 @@ const BugDetailsM = () => {
               <form onSubmit={handleSubmit} className="mt-6 bg-gray-100 p-4 rounded-lg shadow-md">
                 <label className="block text-purple-700 font-semibold mb-1">Reassign to:</label>
                 <select
-                  className="w-full p-2 border border-gray-300 rounded-md mb-4 bg-white text-black"
-                  value={selectedDeveloper}
-                  onChange={(e) => setSelectedDeveloper(e.target.value)}
-                >
-                  <option value="">Select Developer</option>
-                  {developers.map((dev) => (
-                    <option key={dev.developer_id} value={dev.developer_id}>
-                      {dev.developer_name}
-                    </option>
-                  ))}
-                </select>
+  className="w-full p-2 border border-gray-300 rounded-md mb-4 bg-white text-black"
+  value={selectedDeveloper}
+  onChange={(e) => setSelectedDeveloper(e.target.value)}
+>
+  <option value="">Select Developer</option>
+  {developers.map((dev) => {
+    const isRecommended = String(dev.developer_id) === String(selectedDeveloper);
+    return (
+      <option
+        key={dev.developer_id}
+        value={dev.developer_id}
+        style={{
+          backgroundColor: isRecommended ? "#f3e8ff" : "white", // light purple for highlight
+          fontWeight: isRecommended ? "bold" : "normal",
+        }}
+      >
+        {dev.developer_name}
+      </option>
+    );
+  })}
+</select>
 
-                <label className="block text-purple-700 font-semibold mb-1">Extend Due Date:</label>
+                <div className="mb-4 flex flex-col items-center gap-2">
+  <Tooltip
+    title="⚠️ This is an AI-generated recommendation and may not always be accurate. Please review before assigning."
+    placement="top"
+    arrow
+    componentsProps={{
+      tooltip: {
+        sx: {
+          backgroundColor: "#fff8e1",
+          color: "#5d4037",
+          fontSize: "0.85rem",
+          border: "1px solid #ffe082",
+          maxWidth: 300,
+          textAlign: "center",
+        },
+      },
+    }}
+  >
+    <Button
+      variant="outlined"
+      onClick={handleRecommend}
+      sx={{
+        color: "#9333ea",
+        borderColor: "#9333ea",
+        textTransform: "none",
+        fontWeight: 500,
+        padding: "6px 16px",
+        fontSize: "1rem",
+        display: "flex",
+        alignItems: "center",
+        gap: "8px",
+        justifyContent: "center",
+      }}
+    >
+      <div
+        style={{
+          width: "20px",
+          height: "20px",
+          backgroundColor: "#9333ea",
+          color: "#fff",
+          borderRadius: "50%",
+          fontSize: "14px",
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center",
+          flexShrink: 0,
+        }}
+      >
+        i
+      </div>
+      Recommend Developer
+    </Button>
+  </Tooltip>
+
+  {isSameDeveloper && (
+    <div className="text-yellow-600 text-sm font-medium text-center">
+      ⚠️ AI recommended the same developer currently assigned.<br />
+      Please review before confirming.
+    </div>
+  )}
+</div>
+
+                {/*<label className="block text-purple-700 font-semibold mb-1">Extend Due Date:</label>
                 <input
                   type="datetime-local"
                   className="w-full p-2 border border-gray-300 rounded-md mb-4 bg-white text-black"
                   value={dueDate}
                   onChange={(e) => setDueDate(e.target.value)}
                   required
-                />
+                />*/}
+                <label className="block text-purple-700 font-semibold mb-1">
+  Extend Due Date:
+</label>
+<DatePicker
+  selected={dueDate}
+  onChange={(date) => setDueDate(date)}
+  showTimeSelect
+  dateFormat="Pp"
+  placeholderText="Select due date and time"
+  className="w-full p-2 border border-gray-300 rounded-md mb-4 bg-white text-black"
+/>
+
 
                 <button type="submit" className="bg-purple-600 text-white px-4 py-2 rounded w-full">
                   Submit
