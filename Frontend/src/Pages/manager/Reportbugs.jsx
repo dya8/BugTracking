@@ -1,15 +1,26 @@
-import React, { useState } from "react";
+import React, { useState,useEffect} from "react";
 import Sidebar from "./Sidebar";
 import Navbar from "./Navbar";
 
 export default function ReportedBugs() {
-  // Sample reported bug data
-  const [bugs] = useState([
-    { id: 1, name: "Login Issue", project: "Website", assigned: "Dev A", status: "Open", priority: "High", due: "March 15" },
-    { id: 2, name: "Page Crash", project: "Mobile App", assigned: "Dev B", status: "In Progress", priority: "Medium", due: "March 18" },
-    { id: 3, name: "UI Glitch", project: "Dashboard", assigned: "Dev C", status: "Resolved", priority: "Low", due: "March 20" },
-    { id: 4, name: "API Timeout", project: "Backend", assigned: "Dev D", status: "Open", priority: "High", due: "March 22" }
-  ]);
+  
+  
+  // Fetch bugs from API
+  const [bugs, setBugs] = useState([]);
+
+  // Fetch bugs from API
+  useEffect(() => {
+    const fetchBugs = async () => {
+      try {
+        const response = await fetch("http://localhost:3000/api/bugs/open");
+        const data = await response.json();
+        setBugs(data);
+      } catch (error) {
+        console.error("Error fetching bugs:", error);
+      }
+    };
+    fetchBugs();
+  }, []);
 
   return (
     <div className="flex h-screen">
@@ -43,10 +54,10 @@ export default function ReportedBugs() {
                 {bugs.length > 0 ? (
                   bugs.map((bug) => (
                     <tr key={bug.id} className="border-b hover:bg-gray-100">
-                      <td className="p-3">{bug.name}</td>
-                      <td className="p-3">{bug.project}</td>
-                      <td className="p-3">{bug.assigned}</td>
-                      <td className="p-3">{bug.status}</td>
+                      <td className="p-3">{bug.bug_name}</td>
+                      <td className="p-3">{bug.project_name}</td>
+                      <td className="p-3">{bug.assigned_to}</td>
+                      <td className="p-3">{bug.bug_status}</td>
                       <td className="p-3">{bug.priority}</td>
                       <td className="p-3">{bug.due}</td>
                     </tr>

@@ -14,30 +14,48 @@ const LoginPage = () => {
   const handleChange = (e) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
   };
-  // Handle login submission
-  const handleLogin = async () => 
-    {
-    setError(""); // Clear previous errors
+  
+const handleLogin = async () => {
+  setError(""); // Clear previous errors
 
-    if (!formData.email || !formData.password) {
-      setError("Both email and password are required!");
-      return;
+  if (!formData.email || !formData.password) {
+    setError("Both email and password are required!");
+    return;
+  }
+
+  try {
+    const response = await fetch("http://localhost:3000/api/login", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify(formData),
+    });
+
+    const data = await response.json();
+
+    if (!response.ok) {
+      throw new Error(data.error || "Invalid email or password!");
     }
 
-    try {
-      const response = await axios.post("http://localhost:5000/api/login", formData);
-      const { role } = response.data;
+    const { role, dashboardId } = data;
 
-      // Redirect based on role
-      if (role === "Admin") navigate("/admindashboard");
-      else if (role === "Developer") navigate("/devdashboard");
-      else if (role === "Tester") navigate("/dashboard");
-      else if (role === "Project Manager") navigate("/managerdashboard");
-      else setError("Invalid role!");
-    } catch (err) {
-      setError(err.response?.data?.error || "Invalid email or password!");
+    // Redirect based on role
+    if (role === "Admin") navigate(`/admindashboard/${dashboardId}`);
+    else if (role === "Developer") {
+      if (dashboardId) navigate(`/devdashboard/${dashboardId}`);
+      else setError("Invalid developer dashboard!");
     }
-  };
+    else if (role === "Tester") {
+      if (dashboardId) navigate(`/dashboard/${dashboardId}`);
+      else setError("Invalid tester dashboard!");
+    }
+    else if (role === "Project Manager") navigate(`/managerdashboard/${dashboardId}`);
+    else setError("Invalid role!");
+      } catch (err) {
+    setError(err.message);
+  }
+};
 
 
   return (

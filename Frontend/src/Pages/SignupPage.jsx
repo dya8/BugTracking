@@ -24,7 +24,7 @@ const SignupPage = () => {
     if (!formData.companyName.trim()) return;
 
     try {
-      const response = await fetch("http://localhost:5000/api/get-company-details", {
+      const response = await fetch("http://localhost:3000/api/get-company-details", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ companyName: formData.companyName }),

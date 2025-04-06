@@ -1,25 +1,41 @@
-import { useState } from "react";
-import { FaSearch, FaUsers, FaCalendarAlt, FaExternalLinkAlt } from "react-icons/fa";
-import Navbar from "./navbar";  // Import your Navbar component
-import Sidebar from "./sidebar"; // Import your Sidebar component
+import { useState, useEffect } from "react";
+import { FaSearch, FaBug, FaCheckCircle, FaExternalLinkAlt } from "react-icons/fa";
+import Navbar from "./navbar";
+import Sidebar from "./sidebar";
 
-const projectsData = [
-  { id: 1, name: "Project One", team: "Team Details", dueDate: "Due date", manager: "Project manager name", pending: 3, completed: 4 },
-  { id: 2, name: "Project Two", team: "Team Details", dueDate: "Due date", manager: "Project manager name", pending: 2, completed: 5 },
-  { id: 3, name: "Project Three", team: "Team Details", dueDate: "Due date", manager: "Project manager name", pending: 5, completed: 3 },
-  { id: 4, name: "Project Four", team: "Team Details", dueDate: "Due date", manager: "Project manager name", pending: 1, completed: 6 },
-  { id: 5, name: "Project Five", team: "Team Details", dueDate: "Due date", manager: "Project manager name", pending: 4, completed: 2 },
-  { id: 6, name: "Project Six", team: "Team Details", dueDate: "Due date", manager: "Project manager name", pending: 0, completed: 8 },
-];
 
-export default function Projects() {
+export default function Projects({testerId}) {
   const [search, setSearch] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
+  const [projects, setProjects] = useState([]);
   const projectsPerPage = 3;
+  const testId =  Number(testerId);
+
+  useEffect(() => {
+    const fetchTesterProjects = async () => {
+      try {
+        const response = await fetch(`http://localhost:3000/api/projects/tester/${testId}`);
+        if (!response.ok) {
+          throw new Error(`Error: ${response.status}`);
+        }
+        const data = await response.json();
+        console.log("API Response Data:", data);
+        if (Array.isArray(data) && data.length > 0) {
+          setProjects(data);
+        } else {
+          setProjects([]);
+          console.warn("No projects found for this developer.");
+        }
+      } catch (error) {
+        console.error("Failed to fetch projects:", error.message);
+      }
+    };
+    fetchTesterProjects();
+  }, [testId]);
 
   // Filter projects based on search input
-  const filteredProjects = projectsData.filter((project) =>
-    project.name.toLowerCase().includes(search.toLowerCase())
+  const filteredProjects = projects.filter((project) =>
+    project.project_name?.toLowerCase().includes(search.toLowerCase())
   );
 
   // Pagination Logic
@@ -30,18 +46,18 @@ export default function Projects() {
 
   return (
     <div className="flex">
-      <Sidebar /> {/* Sidebar Component */}
+      <Sidebar />
       <div className="flex-1">
-        <Navbar /> {/* Navbar Component */}
-        
+        <Navbar />
+
         <div className="p-6">
           {/* Page Heading & Search */}
           <div className="flex justify-between items-center mb-6">
-            <h1 className="text-2xl font-bold text-purple-700">Current Projects</h1>
+            <h1 className="text-2xl font-bold text-purple-700">Tester Projects</h1>
             <div className="relative">
               <input
                 type="text"
-                placeholder="Search"
+                placeholder="Search by Project Name"
                 className="pl-10 pr-4 py-2 border rounded-lg focus:outline-none"
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
@@ -53,26 +69,42 @@ export default function Projects() {
           {/* Projects Grid */}
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {currentProjects.map((project) => (
-              <div key={project.id} className="bg-white p-4 rounded-lg shadow-md border">
+              <div key={project.project_id} className="bg-white p-4 rounded-lg shadow-md border">
                 <div className="flex justify-between items-center">
-                  <h2 className="text-lg font-bold text-purple-700">{project.name}</h2>
+                  <h2 className="text-lg font-bold text-purple-700">{project.project_name}</h2>
                   <a href="#" className="text-purple-500">
                     <FaExternalLinkAlt />
                   </a>
                 </div>
-                <p className="flex items-center text-gray-700 mt-2">
-                  <FaUsers className="mr-2 text-purple-500" /> {project.team}
-                </p>
-                <p className="flex items-center text-gray-700 mt-1">
-                  <FaCalendarAlt className="mr-2 text-purple-500" /> {project.dueDate}
-                </p>
-                <p className="text-gray-700 mt-1">{project.manager}</p>
-                <p className="mt-2 text-sm">
-                  <span className="text-yellow-600 font-semibold">Pending bugs:</span> {project.pending}
-                </p>
-                <p className="text-sm">
-                  <span className="text-green-600 font-semibold">Completed bugs:</span> {project.completed}
-                </p>
+                <p className="text-gray-700">Git ID: {project.git_id}</p>
+                <p className="text-gray-700">Manager: {project.manager_name}</p>
+                <p className="text-gray-700">Total Bugs: {project.total_bugs}</p>
+                
+                <h3 className="text-md font-bold mt-4">Bugs Reported by Tester:</h3>
+                {project.reported_bugs.length > 0 ? (
+                  <ul>
+                    {project.reported_bugs.map((bug, index) => (
+                      <li key={index} className="text-gray-600 flex items-center">
+                        <FaBug className="mr-2 text-red-500" /> {bug.bug_name} - {bug.bug_status}
+                      </li>
+                    ))}
+                  </ul>
+                ) : (
+                  <p className="text-gray-500">No bugs reported by tester.</p>
+                )}
+
+                <h3 className="text-md font-bold mt-4">Bugs Verified by Tester:</h3>
+                {project.verified_bugs.length > 0 ? (
+                  <ul>
+                    {project.verified_bugs.map((bug, index) => (
+                      <li key={index} className="text-gray-600 flex items-center">
+                        <FaCheckCircle className="mr-2 text-green-500" /> {bug.bug_name} - {bug.bug_status}
+                      </li>
+                    ))}
+                  </ul>
+                ) : (
+                  <p className="text-gray-500">No bugs verified by tester.</p>
+                )}
               </div>
             ))}
           </div>

@@ -30,7 +30,7 @@ const adminSchema = new mongoose.Schema({
 });
 
 const projectSchema = new mongoose.Schema({
-    project_id: { type: Number, required: true, unique: true },
+    project_id: { type: Number, required: true, unique: true }, /**project schema in backend expects array values but schema is number */
     project_name: { type: String, required: true },
     company_id: { type: Number, ref: 'Company', required: true },
     git_id: { type: String, unique: true }
@@ -92,6 +92,7 @@ const bugSchema = new mongoose.Schema({
 });
 
 // Middleware to update resolution_time when bug is resolved
+
 bugSchema.pre('save', function (next) {
     if (this.resolved_at) {
         this.resolution_time = (this.resolved_at - this.created_at) / (1000 * 60 * 60); // Hours
@@ -121,6 +122,7 @@ const projectManagerSchema = new mongoose.Schema({
     email: { type: String, required: true, unique: true },
     password: { type: String, required: true }
 });
+
 // Post-save hook to emit an event when a message is added
 /*chatroomSchema.post("findOneAndUpdate", function (doc) {
     if (doc) {
@@ -141,6 +143,7 @@ const Bug = mongoose.model('Bug', bugSchema);
 const Chatroom = mongoose.model('Chatroom', chatroomSchema);
 const ProjectManager = mongoose.model('ProjectManager', projectManagerSchema);
 
+
 // Export Models
 module.exports = {
     connectDB,
@@ -151,5 +154,6 @@ module.exports = {
     Tester,
     Bug,
     Chatroom,
-    ProjectManager
+    ProjectManager,
+  
 };

@@ -1,10 +1,17 @@
 import { FaTachometerAlt, FaProjectDiagram, FaBug, FaCheckCircle, FaClipboardList, FaComments, FaCog, FaSignOutAlt, FaBars } from "react-icons/fa";
-import { useState } from "react";
+import { useState,useEffect } from "react";
 import { Link } from "react-router-dom";
 
 export default function Sidebar() {
   const [isOpen, setIsOpen] = useState(true);
-
+  const[testerId, setTesterId] = useState(null);
+ useEffect(() => {
+    // Retrieve userId from localStorage
+    const storedUserId = localStorage.getItem("userId");
+    if (storedUserId) {
+      setTesterId(storedUserId);
+    }
+  }, []);
   return (
     <aside className={`bg-purple-700 text-white min-h-screen h-full flex flex-col transition-all ${isOpen ? "w-64" : "w-20"} p-5 overflow-y-auto`}>
       {/* Toggle Button */}
@@ -17,7 +24,7 @@ export default function Sidebar() {
 
       {/* Navigation Links */}
       <nav className="space-y-4 flex-1">
-        <Link to="/dashboard" className="flex items-center space-x-2 px-3 py-2 rounded-md text-white hover:text-white hover:bg-purple-500">
+        <Link to={testerId ? `/dashboard/${testerId}` : "/login"}  className="flex items-center space-x-2 px-3 py-2 rounded-md text-white hover:text-white hover:bg-purple-500">
           <FaTachometerAlt /> {isOpen && <span>Dashboard</span>}
         </Link>
         <Link to="/projects" className="flex items-center space-x-2 px-3 py-2 rounded-md text-white hover:text-white hover:bg-purple-500">

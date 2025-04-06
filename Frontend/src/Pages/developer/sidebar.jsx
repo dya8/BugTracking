@@ -1,21 +1,33 @@
 import { FaCog, FaSignOutAlt, FaChartBar, FaFileAlt, FaBug, FaComments, FaBars } from "react-icons/fa";
-import { useState } from "react";
-import { Link } from "react-router-dom"; // For navigation
+import { useState, useEffect } from "react";
+import { Link } from "react-router-dom";
 
 export default function Sidebar() {
   const [isOpen, setIsOpen] = useState(true);
+  const [userId, setUserId] = useState(null);
+
+  useEffect(() => {
+    // Retrieve userId from localStorage
+    const storedUserId = localStorage.getItem("userId");
+    if (storedUserId) {
+      setUserId(storedUserId);
+    }
+  }, []);
 
   return (
-    <aside className={`bg-purple-700 text-white p-5 h-screen h-full flex flex-col transition-all ${isOpen ? "w-64" : "w-20"}`}>
+    <aside className={`bg-purple-700 text-white p-5 h-screen flex flex-col transition-all ${isOpen ? "w-64" : "w-20"}`}>
       {/* Toggle Button */}
-      <button className="mb-4 flex items-center space-x-2 bg-transparent text-white focus:outline-none hover:bg-purple-600 p-2 rounded-lg" onClick={() => setIsOpen(!isOpen)}>
+      <button
+        className="mb-4 flex items-center space-x-2 bg-transparent text-white focus:outline-none hover:bg-purple-600 p-2 rounded-lg"
+        onClick={() => setIsOpen(!isOpen)}
+      >
         <FaBars size={20} className="text-white" />
         {isOpen && <span className="text-lg font-semibold text-white">Menu</span>}
       </button>
 
       {/* Menu Items */}
       <nav className="space-y-4 flex-1">
-        <Link to="/devdashboard" className="flex items-center space-x-3 px-3 py-3 rounded-md hover:bg-purple-600 transition">
+        <Link to={userId ? `/devdashboard/${userId}` : "/login"} className="flex items-center space-x-3 px-3 py-3 rounded-md hover:bg-purple-600 transition">
           <FaChartBar size={18} className="text-white" />
           {isOpen && <span className="text-white">Dashboard</span>}
         </Link>

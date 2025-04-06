@@ -1,19 +1,47 @@
-import { useState } from "react";
+import { useState,useEffect } from "react";
 import { useNavigate } from "react-router-dom"; // Import useNavigate
 import Sidebar from "./Sidebar";
 import Navbar from "./Navbar";
 import { FaArrowRight } from "react-icons/fa";
 
 const AssignDue = () => {
-  const navigate = useNavigate(); // Hook for navigation
+const navigate = useNavigate(); // Hook for navigation
+const [error, setError] = useState(null);
 
-  const [bugs] = useState([
+  /*const [bugs] = useState([
     { id: 1, name: "Login Issue", project: "Website", status: "Open", assignedBy: "QA A", priority: "High" },
     { id: 2, name: "Page Crash", project: "Mobile App", status: "Reopen", assignedBy: "QA B", priority: "Medium" },
   ]);
+*/
+const [bugs, setBugs] = useState([]);
+  // Fetch bugs from API
+  useEffect(() => {
+    const fetchBugs = async () => {
+      try {
+        const response = await fetch("http://localhost:3000/api/bugs/open", {
+          method: "GET",
+          headers: {
+            "Content-Type": "application/json",
+          },
+        });
 
+        if (!response.ok) {
+          throw new Error(`HTTP error! Status: ${response.status}`);
+        }
+
+        const data = await response.json();
+        console.log("Fetched Bugs:", data); // Debug log
+        setBugs(data);
+      } catch (error) {
+        console.error("Error fetching bugs:", error);
+        setError(error.message);
+      }
+    };
+
+    fetchBugs();
+  }, []); // Empty dependency to run only once
   // Filter only open or reopened bugs
-  const filteredBugs = bugs.filter((bug) => bug.status === "Open" || bug.status === "Reopen");
+  //const filteredBugs = bugs.filter((bug) => bug.status === "Open" || bug.status === "Reopen");
 
   return (
     <div className="flex min-h-screen">
@@ -27,7 +55,7 @@ const AssignDue = () => {
 
         <div className="flex flex-col p-6">
           <h2 className="text-2xl font-bold text-purple-700">Assign due</h2>
-          <p className="text-gray-600">All assigned bugs {filteredBugs.length}</p>
+          <p className="text-gray-600">All assigned bugs {bugs.length}</p>
 
           <div className="mt-4 bg-white shadow-md rounded-lg overflow-hidden">
             <table className="w-full border-collapse">
@@ -42,18 +70,18 @@ const AssignDue = () => {
                 </tr>
               </thead>
               <tbody>
-                {filteredBugs.length > 0 ? (
-                  filteredBugs.map((bug) => (
-                    <tr key={bug.id} className="border-b hover:bg-purple-100">
-                      <td className="py-2 px-4">{bug.name}</td>
-                      <td className="py-2 px-4">{bug.project}</td>
-                      <td className="py-2 px-4 font-semibold text-red-600">{bug.status}</td>
-                      <td className="py-2 px-4">{bug.assignedBy}</td>
-                      <td className="py-2 px-4 text-red-500 font-bold">{bug.priority}</td>
+                {bugs.length > 0 ? (
+                  bugs.map((bug,index) => (
+                    <tr key={index} className="border-b hover:bg-purple-100">
+                      <td className="py-2 px-4">{bug.bug_name || 'N/A'}</td>
+                      <td className="py-2 px-4">{bug.project_name || 'N/A'}</td>
+                      <td className="py-2 px-4 font-semibold text-red-600">{bug.bug_status || 'N/A'}</td>
+                      <td className="py-2 px-4">{bug.assigned_to || 'N/A'}</td>
+                      <td className="py-2 px-4 text-red-500 font-bold">{bug.priority || 'N/A'}</td>
                       <td className="py-2 px-4 text-right">
                         <FaArrowRight
                           className="text-purple-600 cursor-pointer hover:text-purple-800"
-                          onClick={() => navigate(`/assign-due/bug/${bug.id}`)} // Navigate on click
+                          onClick={() => navigate(`/assign-due/bug/${bug.bug_id|| 'N/A'}`)} // Navigate on click
                         />
                       </td>
                     </tr>

@@ -121,7 +121,7 @@ const TeamSignupPage = () => {
     }
 
     try {
-      const response = await axios.post("http://localhost:5000/api/team-signup", {
+      const response = await axios.post("http://localhost:3000/api/team-signup", {
         collaborators,
         company_name: companyName, // Sending company_id to backend
         project_name: projectName, // Sending project_name to backend
