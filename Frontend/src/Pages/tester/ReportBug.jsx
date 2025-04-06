@@ -24,20 +24,7 @@ export default function ReportBugForm() {
     comments: "",
     dueDate: dayjs().add(2, "hour")
   });
-  // Fetch tester ID when the component loads
-   /*useEffect(() => {
-    async function fetchTesterId() {
-      try {
-        const response = await axios.get("/api/tester/profile"); // Adjust API route if needed
-        setTesterId(response.data.testerId);
-      } catch (error) {
-        console.error("Error fetching tester ID:", error);
-      } finally {
-        setLoading(false);
-      }
-    }
-    fetchTesterId();
-  }, []);*/
+ 
   useEffect(() => {
     async function fetchProjects() {
         try {

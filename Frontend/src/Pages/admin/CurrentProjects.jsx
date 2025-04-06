@@ -3,17 +3,17 @@ import { FaSearch, FaExternalLinkAlt } from "react-icons/fa";
 import Navbar from "./navbar";
 import Sidebar from "./sidebar";
 
-export default function Projects() {
+export default function Projects({adminId}) {
   const [search, setSearch] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
   const [projects, setProjects] = useState([]);
   const projectsPerPage = 3;
-  const adminId = 1; // Example admin ID
+  const adId = Number(adminId); // Example admin ID
 
   useEffect(() => {
     const fetchProjects = async () => {
       try {
-        const response = await fetch(`http://localhost:3000/api/admin/${adminId}/projects`);
+        const response = await fetch(`http://localhost:3000/api/admin/${adId}/projects`);
         if (!response.ok) {
           throw new Error(`Error: ${response.status}`);
         }
@@ -25,7 +25,7 @@ export default function Projects() {
       }
     };
     fetchProjects();
-  }, [adminId]);
+  }, [adId]);
 
   // Filter projects based on search input
   const filteredProjects = projects.filter((project) =>

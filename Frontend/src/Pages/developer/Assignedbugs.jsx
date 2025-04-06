@@ -4,16 +4,19 @@ import { useNavigate } from "react-router-dom";
 import Sidebar from "./sidebar";
 import Navbar from "./navbar";
 
-const AssignedBugs = () => {
+const AssignedBugs = ({ userId }) => {
   const navigate = useNavigate();
   const [bugs, setBugs] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
-
+  const developerId= Number(userId);
+  console.log(`Sending developerid as: ${developerId}, Type: ${typeof developerId}`);
   useEffect(() => {
+    if (!developerId) return; // Ensure developerId is available
+
     const fetchBugs = async () => {
       try {
-        const response = await fetch("http://localhost:3000/api/bugs/assigned");
+        const response = await fetch(`http://localhost:3000/api/bugs/assigned?developerId=${developerId}`);
         if (!response.ok) {
           throw new Error("Failed to fetch assigned bugs");
         }
@@ -27,7 +30,7 @@ const AssignedBugs = () => {
     };
 
     fetchBugs();
-  }, []);
+  }, [developerId]);
 
   return (
     <div className="flex h-screen bg-gray-100">
@@ -52,10 +55,10 @@ const AssignedBugs = () => {
               <table className="w-full text-left border-collapse">
                 <thead>
                   <tr className="bg-purple-200 text-purple-800">
-                    <th className="p-3">Bug name</th>
-                    <th className="p-3">Project name</th>
-                    <th className="p-3">Bug status</th>
-                    <th className="p-3">Assigned by</th>
+                    <th className="p-3">Bug Name</th>
+                    <th className="p-3">Project Name</th>
+                    <th className="p-3">Bug Status</th>
+                    <th className="p-3">Assigned By</th>
                     <th className="p-3">Priority</th>
                     <th className="p-3">Due</th>
                   </tr>
@@ -86,7 +89,7 @@ const BugRow = ({ bug }) => {
 
   useEffect(() => {
     if (!bug.due || isNaN(new Date(bug.due).getTime())) {
-      console.error("Invalid due date received:", bug.due); // Debugging
+      console.error("Invalid due date received:", bug.due);
       setTimeLeft("Invalid due date");
       return;
     }
@@ -97,14 +100,16 @@ const BugRow = ({ bug }) => {
       const remaining = dueTime - now;
 
       if (remaining > 0) {
-        if (remaining < 60 * 1000) {
-          setTimeLeft(`Due in ${Math.floor(remaining / 1000)} seconds`);
-        } else if (remaining < 60 * 60 * 1000) {
-          setTimeLeft(`Due in ${Math.floor(remaining / (60 * 1000))} minutes`);
-        } else if (remaining < 24 * 60 * 60 * 1000) {
-          setTimeLeft(`Due in ${Math.floor(remaining / (60 * 60 * 1000))} hours`);
+        const days = Math.floor(remaining / (24 * 60 * 60 * 1000));
+        const hours = Math.floor((remaining % (24 * 60 * 60 * 1000)) / (60 * 60 * 1000));
+        const minutes = Math.floor((remaining % (60 * 60 * 1000)) / (60 * 1000));
+
+        if (days > 0) {
+          setTimeLeft(`Due in ${days}d ${hours}h`);
+        } else if (hours > 0) {
+          setTimeLeft(`Due in ${hours}h ${minutes}m`);
         } else {
-          setTimeLeft(`Due in ${Math.floor(remaining / (24 * 60 * 60 * 1000))} days`);
+          setTimeLeft(`Due in ${minutes}m`);
         }
       } else {
         setTimeLeft("Time Over! Bug Stuck");

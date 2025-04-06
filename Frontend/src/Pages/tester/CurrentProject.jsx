@@ -3,17 +3,18 @@ import { FaSearch, FaBug, FaCheckCircle, FaExternalLinkAlt } from "react-icons/f
 import Navbar from "./navbar";
 import Sidebar from "./sidebar";
 
-export default function Projects() {
+
+export default function Projects({testerId}) {
   const [search, setSearch] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
   const [projects, setProjects] = useState([]);
   const projectsPerPage = 3;
-  const testerId = 1;
+  const testId =  Number(testerId);
 
   useEffect(() => {
     const fetchTesterProjects = async () => {
       try {
-        const response = await fetch(`http://localhost:3000/api/projects/tester/${testerId}`);
+        const response = await fetch(`http://localhost:3000/api/projects/tester/${testId}`);
         if (!response.ok) {
           throw new Error(`Error: ${response.status}`);
         }
@@ -30,7 +31,7 @@ export default function Projects() {
       }
     };
     fetchTesterProjects();
-  }, [testerId]);
+  }, [testId]);
 
   // Filter projects based on search input
   const filteredProjects = projects.filter((project) =>

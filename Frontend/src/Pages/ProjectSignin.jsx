@@ -24,7 +24,7 @@ const ProjectSignin = () => {
     setError("");
 
     try {
-      const response = await axios.post("http://localhost:5000/api/project-signup", formData);
+      const response = await axios.post("http://localhost:3000/api/project-signup", formData);
       alert(response.data.message);
       navigate("/team");
     } catch (err) {

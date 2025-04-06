@@ -4,16 +4,22 @@ import Navbar from "./navbar";
 import Sidebar from "./sidebar";
 import { useParams } from "react-router-dom";
 
-export default function Projects() {
+export default function Projects({userId}) {
   const [search, setSearch] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
   const [projects, setProjects] = useState([]);
   const projectsPerPage = 3;
-  const devid = 1;
+  const devid = Number(userId);
 
-  console.log(`Sending developerid as: ${devid}, Type: ${typeof devid}`);
+  
 
   useEffect(() => {
+   
+  
+    if (!devid) {
+      console.warn("Developer ID is missing. Skipping API call.");
+      return;
+    }
     const fetchDeveloper = async () => {
       try {
         const response = await fetch(`http://localhost:3000/api/projects/developer/${devid}`);

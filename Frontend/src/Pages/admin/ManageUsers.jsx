@@ -7,20 +7,21 @@ import Sidebar from "./Sidebar";
 import { FaSearch, FaBell, FaUser } from "react-icons/fa"; 
 import { useNavigate } from "react-router-dom";  // ✅ Import useNavigate
 
-export default function ManageUsers() {
+export default function ManageUsers({adminId}) {
   const [users, setUsers] = useState([{ email: "", role: "" }]);
   const [addedUsers, setAddedUsers] = useState([]);
   const [showPopup, setShowPopup] = useState(false);
   const [fetchedUsers, setFetchedUsers] = useState([]);
   const [loading, setLoading] = useState(false);
-  const adminId = 1;
+  const adId = Number(adminId); // Example admin ID
+
   const navigate = useNavigate(); // ✅ Initialize navigate
   useEffect(() => {
     const fetchUsers = async () => {
       setLoading(true);
       try {
-        console.log("Admin ID:", adminId);
-        const response = await fetch(`http://localhost:3000/api/users/${adminId}`);
+        console.log("Admin ID:", adId);
+        const response = await fetch(`http://localhost:3000/api/users/${adId}`);
         const data = await response.json();
   
         console.log("Fetched Data:", data); // Debugging line
@@ -51,8 +52,8 @@ export default function ManageUsers() {
       }
     };
   
-    if (adminId) fetchUsers(); // Only fetch if adminId is valid
-  }, [adminId]);
+    if (adId) fetchUsers(); // Only fetch if adminId is valid
+  }, [adId]);
   /*const handleDeleteUser = async (user) => {
     console.log("Full User Object:", user);  // Debugging
 

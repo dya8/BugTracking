@@ -16,7 +16,7 @@ const CompanySignin = () => {
 
   const handleSubmit = async () => {
     try {
-      const response = await axios.post("http://localhost:5000/api/company-signup", {
+      const response = await axios.post("http://localhost:3000/api/company-signup", {
         company_name: formData.companyName,
         email: formData.companyEmail,
       });

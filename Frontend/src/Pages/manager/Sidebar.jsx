@@ -1,45 +1,47 @@
-import React, { useState } from "react";
+import { FaCog, FaSignOutAlt, FaTachometerAlt, FaUsers, FaFolderOpen, FaBars } from "react-icons/fa";
+import { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
-import { FaUsers, FaFolderOpen, FaBug, FaExclamationTriangle, FaClock, FaCog, FaSignOutAlt, FaBars, FaTachometerAlt } from "react-icons/fa";
 
 export default function Sidebar() {
   const [isOpen, setIsOpen] = useState(true);
+  const [managerId, setManagerId] = useState(null);
+
+  useEffect(() => {
+    const storedUserId = localStorage.getItem("userId");
+    if (storedUserId) {
+      setManagerId(storedUserId);
+    }
+  }, []);
 
   return (
-    <aside className={`bg-purple-700 text-white p-5 h-screen h-full flex flex-col transition-all duration-300 ${isOpen ? "w-64" : "w-20"}`}>
+    <aside className={`bg-purple-700 text-white p-5 h-screen flex flex-col transition-all ${isOpen ? "w-64" : "w-20"}`}>
       {/* Toggle Button */}
-      <button 
-        className="mb-4 flex items-center space-x-2 bg-transparent text-white focus:outline-none hover:bg-purple-600 p-2 rounded-lg" 
-        onClick={() => setIsOpen(!isOpen)}
-      >
-        <FaBars size={20} className="text-white" />
-        {isOpen && <span className="text-lg font-semibold">Menu</span>}
+      <button className="mb-4 bg-purple-700 text-white focus:outline-none hover:bg-transparent" onClick={() => setIsOpen(!isOpen)}>
+        <FaBars size={20} />
       </button>
 
       {/* Menu Items */}
       <nav className="space-y-4 flex-1">
-        <SidebarItem to="/managerdashboard" icon={<FaTachometerAlt size={18} className="text-white" />} label="Dashboard" isOpen={isOpen} />
-        <SidebarItem to="/manage-team" icon={<FaUsers size={18} className="text-white" />} label="Manage Team" isOpen={isOpen} />
-        <SidebarItem to="/current-projects" icon={<FaFolderOpen size={18} className="text-white" />} label="Current Projects" isOpen={isOpen} />
-        <SidebarItem to="/trackbugs" icon={<FaBug size={18} className="text-white" />} label="Track Bugs" isOpen={isOpen} />
-        <SidebarItem to="/reported-bugs" icon={<FaExclamationTriangle size={18} className="text-white" />} label="Reported Bugs" isOpen={isOpen} />
-       {/* <SidebarItem to="/assign-due" icon={<FaClock size={18} className="text-white" />} label="Assign Due" isOpen={isOpen} /> */}
+        <Link to={managerId ? `/managerdashboard/${managerId}` : "/login"} className="flex items-center space-x-2 px-3 py-2 rounded-md text-white hover:bg-purple-500">
+          <FaTachometerAlt /> {isOpen && <span>Dashboard</span>}
+        </Link>
+        <Link to="/manage-team" className="flex items-center space-x-2 px-3 py-2 rounded-md text-white hover:bg-purple-500">
+          <FaUsers /> {isOpen && <span>Manage Team</span>}
+        </Link>
+        <Link to="/current-projects" className="flex items-center space-x-2 px-3 py-2 rounded-md text-white hover:bg-purple-500">
+          <FaFolderOpen /> {isOpen && <span>Current Projects</span>}
+        </Link>
       </nav>
 
       {/* Footer Items */}
-      <div className="space-y-3">
-        <SidebarItem to="/settings" icon={<FaCog size={18} className="text-white" />} label="Settings" isOpen={isOpen} />
-        <SidebarItem to="/logout" icon={<FaSignOutAlt size={18} className="text-white" />} label="Log Out" isOpen={isOpen} />
+      <div className="space-y-2">
+        <Link to="/manager-settings" className="flex items-center space-x-2 px-3 py-2 rounded-md text-white hover:text-white">
+          <FaCog /> {isOpen && <span>Settings</span>}
+        </Link>
+        <Link to="/" className="flex items-center space-x-2 px-3 py-2 rounded-md text-white hover:text-white">
+          <FaSignOutAlt /> {isOpen && <span>Log Out</span>}
+        </Link>
       </div>
     </aside>
-  );
-}
-
-function SidebarItem({ to, icon, label, isOpen }) {
-  return (
-    <Link to={to} className="flex items-center space-x-3 px-3 py-3 rounded-md hover:bg-purple-600 transition">
-      {icon}
-      {isOpen && <span className="text-white">{label}</span>}
-    </Link>
   );
 }

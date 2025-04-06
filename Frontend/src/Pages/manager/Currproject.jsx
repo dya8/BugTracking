@@ -3,19 +3,19 @@ import { FaSearch, FaUsers, FaExternalLinkAlt } from "react-icons/fa";
 import Navbar from "./navbar";
 import Sidebar from "./sidebar";
 
-export default function Projects() {
+export default function Projects({managerId}) {
   const [search, setSearch] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
   const [projects, setProjects] = useState([]);
   const projectsPerPage = 3;
-  const managerId = 1; // Example manager ID
+  const manId = Number(managerId); // Example manager ID
 
-  console.log(`Sending managerid as: ${managerId}, Type: ${typeof managerId}`);
+  console.log(`Sending managerid as: ${manId}, Type: ${typeof manId}`);
 
   useEffect(() => {
     const fetchProjects = async () => {
       try {
-        const response = await fetch(`http://localhost:3000/api/projects/manager/${managerId}`);
+        const response = await fetch(`http://localhost:3000/api/projects/manager/${manId}`);
         if (!response.ok) {
           throw new Error(`Error: ${response.status}`);
         }
@@ -32,7 +32,7 @@ export default function Projects() {
       }
     };
     fetchProjects();
-  }, [managerId]);
+  }, [manId]);
 
   // Filter projects based on search input
   const filteredProjects = projects.filter((project) =>
