@@ -9,7 +9,7 @@ import axios from "axios";
 import { Tooltip } from "@mui/material";
 
 export default function ReportBugForm() {
-  const [testerId, setTesterId] = useState(1);
+  const [testId,setTesterId] =useState(1);
   const [loading, setLoading] = useState(false);
   const [projects, setProjects] = useState([]);
   const [assignedTo, setAssignedTo] = useState('');
@@ -31,7 +31,7 @@ export default function ReportBugForm() {
   useEffect(() => {
     async function fetchProjects() {
       try {
-        const response = await axios.get("http://localhost:3000/api/tester/projects");
+        const response = await axios.get(`http://localhost:3000/api/tester/${testId}/projects`);
         setProjects(response.data.projects);
       } catch (error) {
         console.error("Error fetching projects:", error);
@@ -39,7 +39,7 @@ export default function ReportBugForm() {
       }
     }
     fetchProjects();
-  }, [testerId]);
+  }, [testId]);
 
   // Fetch developers when project changes
   useEffect(() => {
@@ -99,6 +99,7 @@ export default function ReportBugForm() {
       alert("❌ Failed to get recommendation.");
     }
   };
+  
   const handleClear = () => {
     setFormData({
       bugTitle: "",
@@ -118,7 +119,7 @@ export default function ReportBugForm() {
 
   // Handle final submission
   const handleSubmit = async () => {
-    if (!testerId) {
+    if (!testId) {
       console.error("Tester ID not available!");
       return;
     }
@@ -157,7 +158,7 @@ export default function ReportBugForm() {
 
           {loading ? (
             <p>Loading tester details...</p>
-          ) : !testerId ? (
+          ) : !testId ? (
             <p className="text-red-500">Error: Unable to fetch tester details.</p>
           ) : (
             <div className="grid grid-cols-2 gap-6">
@@ -313,8 +314,11 @@ export default function ReportBugForm() {
                   <InputLabel>Bug type</InputLabel>
                   <Select name="bugType" value={formData.bugType} onChange={handleChange}>
                     <MenuItem value="UI">UI Issue</MenuItem>
-                    <MenuItem value="Backend">Backend Issue</MenuItem>
+                    <MenuItem value="Backend">Crash</MenuItem>
+                    <MenuItem value="Performance">Data Loss</MenuItem>
+                    <MenuItem value="Performance">Security Vulnerability</MenuItem>
                     <MenuItem value="Performance">Performance Issue</MenuItem>
+                    <MenuItem value="Performance">Functionality Bug</MenuItem>
                   </Select>
                 </FormControl>
               </div>

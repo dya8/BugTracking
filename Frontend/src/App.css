@@ -12,3 +12,21 @@
   display: flex;
   flex-direction: column;
 }
+/* Style the Chatbase widget */
+#chatbase-bubble-button {
+  background-color:#4512b3 !important; /* Purple shade */
+  border-radius: 50% !important;
+  box-shadow: 0 4px 12px rgba(142, 68, 173, 0.3) !important;
+  backdrop-filter: blur(5px) !important;
+  position: fixed !important;
+  bottom: 30px !important;
+  right: 30px !important; 
+  z-index: 1000 !important; 
+  transform: scale(1.1); 
+  transition: all 0.3s ease;
+}
+
+#chatbase-button:hover {
+  transform: scale(1.2); 
+  box-shadow: 0 6px 20px rgba(142, 68, 173, 0.4);
+}

@@ -280,7 +280,7 @@ app.get("/api/tester/:id", async (req, res) => {
     console.log("Requested Tester ID:", id); // Log the ID being received
 
     const tester = await Tester.findOne({ tester_id: id }, "tester_name");
-    console.log("Developer Found:", tester); // Log what MongoDB returns
+    console.log(" Found:", tester); // Log what MongoDB returns
 
     if (!tester) {
       return res.status(404).json({ error: "Tester not found!" });
@@ -901,9 +901,9 @@ app.get("/api/bugs",async(req,res) => {
     }
     } );
 
-app.get("/api/tester/projects", async (req, res) => {
+app.get("/api/tester/:id/projects", async (req, res) => {
     try {
-        const testerId = 1;
+        const testerId = Number(req.params.id);
         if (isNaN(testerId)||!testerId) {
             return res.status(404).json({ error: "Tester not found" });
         }
@@ -1621,7 +1621,7 @@ app.post("/recommend", async (req, res) => {
       );
   
       // 3. Send to ML model
-      const mlResponse = await axios.post("https://20cb-35-221-185-202.ngrok-free.app/predict", {
+      const mlResponse = await axios.post("https://d856-34-57-24-211.ngrok-free.app/predict", {
         candidates
       });
       
@@ -1632,6 +1632,36 @@ app.post("/recommend", async (req, res) => {
       res.status(500).json({ error: "Failed to recommend developer" });
     }
   });
+  // POST /predict-priority - Predicts bug priority based on bug type
+  /*app.post('/predict-priority', async (req, res) => {
+    try {
+      const { bug_type } = req.body;
+  
+      const bugTypeMap = {
+        "Functionality Bug": 0,
+        "Performance Issue": 1,
+        "Crash": 2,
+        "Security Vulnerability": 3,
+        "UI Glitch": 4,
+        "Other": 5
+      };
+  
+      const encodedBugType = bugTypeMap[bug_type];
+      if (encodedBugType === undefined) {
+        return res.status(400).json({ error: "Unknown bug_type" });
+      }
+  
+      const response = await axios.post("https://7fc0-34-106-10-231.ngrok-free.app/predict-priority", {
+        bug_type: encodedBugType
+      });
+  
+      res.json(response.data);
+    } catch (err) {
+      console.error("📉 Priority prediction error:", err.message);
+      res.status(500).json({ error: "Priority prediction failed" });
+    }
+  });*/
+
 // API to fetch projects for a specific developer without using populate
 /*app.get('/api/projects/developer/:devid', async (req, res) => {
   // Convert developerid from URL params to a number
@@ -2161,55 +2191,105 @@ app.get('/api/project-stats/:projectName', async (req, res) => {
 app.get("/", (req, res) => {
     res.send("Bug Tracking API is running 🚀");
 });
-// ✅ Bug status API
-app.get("/api/bugs/open", async (req, res) => {
-    try {
-      const openBugs = await Bug.aggregate([
-        {
-          $match: {
-            bug_status: { $in: ["Open", "Reopen"] }
-          }
-        },
-        {
-          $lookup: {
-            from: "projects",
-            localField: "project_id",
-            foreignField: "project_id",
-            as: "projectDetails"
-          }
-        },
-        {
-          $lookup: {
-            from: "developers",
-            localField: "assigned_to",
-            foreignField: "developer_id",
-            as: "developerDetails"
-          }
-        },
-        {
-          $unwind: "$projectDetails"
-        },
-        {
-          $unwind: "$developerDetails"
-        },
-        {
-          $project: {
-            _id: 0,
-            bug_name: 1,
-            bug_status: 1,
-            priority: 1,
-            project_name: "$projectDetails.project_name",
-            assigned_to: "$developerDetails.developer_name"
-          }
-        }
-      ]);
-  
-      res.status(200).json(openBugs);
-    } catch (error) {
-      console.error("Error fetching bugs:", error);
-      res.status(500).json({ error: "Internal Server Error" });
+
+
+app.get("/api/bugs/:id/open", async (req, res) => {
+  try {
+    const managerId = parseInt(req.params.id);
+
+    // 🟢 Step 1: Get project IDs from ProjectManager collection
+    const manager = await ProjectManager.findOne({ manager_id: managerId });
+    if (!manager) {
+      return res.status(404).json({ error: "Manager not found" });
     }
-  });
+
+    const projectIds = manager.project_id; // array of project IDs
+
+    // 🟢 Step 2: Fetch all projects to get names
+    const projects = await Project.find({ project_id: { $in: projectIds } });
+
+    // 🟢 Step 3: Fetch all bugs from these projects
+    const bugs = await Bug.find({ project_id: { $in: projectIds } });
+    console.log("Bugs in those projects:", bugs);
+
+    // 🟢 Step 4: Get all developer IDs used in these bugs
+    const developerIds = bugs.map(bug => bug.assigned_to);
+    const developers = await Developer.find({ developer_id: { $in: developerIds } });
+
+    // 🟢 Step 5: Create maps
+    const developerMap = {};
+    developers.forEach(dev => {
+      developerMap[dev.developer_id] = dev.developer_name;
+    });
+
+    const projectMap = {};
+    projects.forEach(proj => {
+      projectMap[proj.project_id] = proj.project_name;
+    });
+
+    // 🟢 Step 6: Format final bug list
+    const formattedBugs = bugs.map(bug => ({
+      bug_name: bug.bug_name,
+      bug_status: bug.bug_status,
+      priority: bug.priority,
+      due: bug.due,
+      assigned_to: developerMap[bug.assigned_to] || "Unassigned",
+      project_name: projectMap[bug.project_id] || "Unknown Project"
+    }));
+
+    res.status(200).json(formattedBugs);
+  } catch (error) {
+    console.error("Error fetching bugs:", error);
+    res.status(500).json({ error: "Internal Server Error" });
+  }
+});
+app.get("/api/bugss/developer/:id", async (req, res) => {
+  try {
+    const developerId = parseInt(req.params.id);
+
+    // Step 1: Get the developer document to get project_ids
+    const developer = await Developer.findOne({ developer_id: developerId });
+    if (!developer) {
+      return res.status(404).json({ error: "Developer not found" });
+    }
+
+    const projectIds = developer.project_id;
+
+    // Step 2: Fetch all bugs in those projects
+    const bugs = await Bug.find({ project_id: { $in: projectIds } });
+
+    // Step 3: Fetch project names
+    const projects = await Project.find({ project_id: { $in: projectIds } });
+    const projectMap = {};
+    projects.forEach(proj => {
+      projectMap[proj.project_id] = proj.project_name;
+    });
+
+    // Step 4: Fetch testers who reported the bugs
+    const testerIds = bugs.map(bug => bug.reported_by);
+    const testers = await Tester.find({ tester_id: { $in: testerIds } });
+    const testerMap = {};
+    testers.forEach(tester => {
+      testerMap[tester.tester_id] = tester.tester_name;
+    });
+
+    // Step 5: Format response
+    const formattedBugs = bugs.map(bug => ({
+      bug_name: bug.bug_name,
+      bug_status: bug.bug_status,
+      priority: bug.priority,
+      due:bug.due,
+      project_name: projectMap[bug.project_id] || "Unknown Project",
+      reported_by: testerMap[bug.reported_by] || "Unknown Tester"
+    }));
+
+    res.status(200).json(formattedBugs);
+  } catch (error) {
+    console.error("Error fetching developer bugs:", error);
+    res.status(500).json({ error: "Internal Server Error" });
+  }
+});
+
 
 // Start Server
 const PORT = process.env.PORT || 3000;

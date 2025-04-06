@@ -31,6 +31,12 @@ export default function Sidebar() {
         <Link to="/current-projects" className="flex items-center space-x-2 px-3 py-2 rounded-md text-white hover:bg-purple-500">
           <FaFolderOpen /> {isOpen && <span>Current Projects</span>}
         </Link>
+        <Link to="/trackbugs" className="flex items-center space-x-2 px-3 py-2 rounded-md text-white hover:bg-purple-500">
+          <FaFolderOpen /> {isOpen && <span>Track Bugs</span>}
+        </Link>
+        <Link to="/reported-bugs" className="flex items-center space-x-2 px-3 py-2 rounded-md text-white hover:bg-purple-500">
+          <FaFolderOpen /> {isOpen && <span>Reported Bugs</span>}
+        </Link>
       </nav>
 
       {/* Footer Items */}

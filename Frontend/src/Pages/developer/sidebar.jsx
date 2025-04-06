@@ -39,6 +39,10 @@ export default function Sidebar() {
           <FaBug size={18} className="text-white" />
           {isOpen && <span className="text-white">Assigned Bugs</span>}
         </Link>
+        <Link to="/allbugs" className="flex items-center space-x-3 px-3 py-3 rounded-md hover:bg-purple-600 transition">
+          <FaBug size={18} className="text-white" />
+          {isOpen && <span className="text-white">All bugs</span>}
+        </Link>
         <Link to="/chatroom" className="flex items-center space-x-3 px-3 py-3 rounded-md hover:bg-purple-600 transition">
           <FaComments size={18} className="text-white" />
           {isOpen && <span className="text-white">Chat Room</span>}

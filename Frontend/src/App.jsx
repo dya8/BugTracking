@@ -1,5 +1,5 @@
 import React from 'react';
-import { useState } from 'react'; // Import useState for managing state
+import { useState,useEffect } from 'react'; // Import useState for managing state
 import { BrowserRouter as Router, Route, Routes } from 'react-router-dom';
 import LandingPage from './test1';
 import  Login  from './test2'
@@ -47,14 +47,30 @@ import ProjectStatsT from './Pages/tester/ProjectStatsT';
 import ProjectStatsD from './Pages/developer/ProjectStatsD';
 import ProjectStatsM from './Pages/manager/ProjectStatsM';
 import SettingsM from './Pages/manager/SettingsM';
+import AssignedBugss from './Pages/developer/Reportedbugss';
+import ChatbaseBot from './Pages/chatbot';
 function App() {
   const [userId, setUserId] = useState(null); // Store User ID
   const[testerId, setTesterId] = useState(null); // Store Tester ID
   const[adminId, setAdminId] = useState(null); // Store Admin ID
   const [managerId, setManagerId] = useState(null); // Store Manager ID
+    const [loading, setLoading] = useState(true);
+  
+    useEffect(() => {
+      // Simulate global loading — e.g., auth check or preload
+      const timer = setTimeout(() => {
+        setLoading(false);
+      }, 2000); // You can also make API calls here
+  
+      return () => clearTimeout(timer);
+    }, []);
+  
+    if (loading) return <LoadingPage />; // ✅ This will show before anything else
+  
 
   return (
 <Router>
+<ChatbaseBot />
       <Routes>
        <Route path="/" element={<WelcomePage/>} />
       <Route path="/signup" element={<SignupPage/>} />
@@ -103,6 +119,7 @@ function App() {
       <Route path="/project-stats/:projectName" element={<ProjectStats />} />
       <Route path="/project-statsT/:projectName" element={<ProjectStatsT />} />
       <Route path="/project-statsD/:projectName" element={<ProjectStatsD />} />
+      <Route path="/allbugs" element={<AssignedBugss/>}/>
       <Route path="/project-statsM/:projectName" element={<ProjectStatsM />} />
      </Routes>
        </Router>
