@@ -8,7 +8,7 @@ export default function Navbar() {
   const [hasNotification, setHasNotification] = useState(false);
 
   useEffect(() => {
-    const socket = io("http://localhost:3000"); 
+    const socket = io("http://localhost:3000");
 
     // Listen for new chat message notifications
     socket.on("newMessage", () => {
@@ -20,33 +20,29 @@ export default function Navbar() {
 
   // Handle click on notification bell
   const handleNotificationClick = () => {
-    setHasNotification(false); // Remove red dot
-    navigate("/devnotifications"); // Redirect to notifications page
+    setHasNotification(false);
+    navigate("/devnotifications");
+  };
+
+  // Handle click on Developer info
+  const handleUserClick = () => {
+    navigate("/settings"); // Adjust the route as per your route setup
   };
 
   return (
     <div className="flex justify-between items-center p-4 bg-white shadow-md">
-      <div className="flex items-center space-x-4">
-        {/* Search Bar */}
-        <form className="relative">
-          <FaSearch className="absolute left-2 top-2 text-gray-400" />
-          <input
-            type="text"
-            placeholder="Search"
-            className="pl-8 pr-2 py-1 border rounded-md"
-          />
-        </form>
+      {/* Left section (can add logo or search bar here later) */}
+      <div className="flex items-center">
+        {/* Optional content on the left */}
+      </div>
 
-        {/* Notifications with Red Dot */}
-        <div className="relative cursor-pointer" onClick={handleNotificationClick}>
-          <FaBell className="text-purple-700" />
-          {hasNotification && (
-            <span className="absolute top-0 right-0 w-2 h-2 bg-red-500 rounded-full"></span>
-          )}
-        </div>
-
+      {/* Right section */}
+      <div className="flex items-center gap-4">
         {/* User Info */}
-        <div className="flex items-center space-x-1 text-purple-700 cursor-pointer">
+        <div
+          className="flex items-center text-purple-700 cursor-pointer gap-2"
+          onClick={handleUserClick}
+        >
           <span>Developer</span>
           <FaUser className="text-purple-700" />
         </div>
@@ -54,4 +50,3 @@ export default function Navbar() {
     </div>
   );
 }
-

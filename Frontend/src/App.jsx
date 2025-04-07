@@ -49,6 +49,7 @@ import ProjectStatsM from './Pages/manager/ProjectStatsM';
 import SettingsM from './Pages/manager/SettingsM';
 import AssignedBugss from './Pages/developer/Reportedbugss';
 import ChatbaseBot from './Pages/chatbot';
+import LogoutPage from './Pages/logout';
 function App() {
   const [userId, setUserId] = useState(null); // Store User ID
   const[testerId, setTesterId] = useState(null); // Store Tester ID
@@ -121,6 +122,7 @@ function App() {
       <Route path="/project-statsD/:projectName" element={<ProjectStatsD />} />
       <Route path="/allbugs" element={<AssignedBugss userId={userId}/>}/>
       <Route path="/project-statsM/:projectName" element={<ProjectStatsM />} />
+      <Route path="/logout" element={<LogoutPage />} />
      </Routes>
        </Router>
   )

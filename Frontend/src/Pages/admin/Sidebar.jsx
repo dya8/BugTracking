@@ -39,7 +39,7 @@ export default function Sidebar() {
         <Link key="settings" to="/setting" className="flex items-center space-x-2 px-3 py-2 rounded-md text-white hover:text-white">
           <FaCog /> {isOpen && <span>Settings</span>}
         </Link>
-        <Link key="logout" to="/" className="flex items-center space-x-2 px-3 py-2 rounded-md text-white hover:text-white">
+        <Link key="logout" to="/logout" className="flex items-center space-x-2 px-3 py-2 rounded-md text-white hover:text-white">
           <FaSignOutAlt /> {isOpen && <span>Log Out</span>}
         </Link>
       </div>

@@ -39,11 +39,6 @@ const WelcomePage = () => {
         Let’s Go!
       </button>
 
-      {/* Contact Us */}
-      <p className="mt-6 text-sm underline cursor-pointer hover:text-gray-200">
-        Contact Us
-      </p>
-
       {/* Ladybug Image */}
       <img
         src="/bug.png"

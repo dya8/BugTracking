@@ -54,51 +54,6 @@ const generateUniqueId = async (entity) => {
     return uniqueId;
 };
 
-//General login API
-/*app.post("/api/login", async (req, res) => {
-    try {
-        const { email, password } = req.body;
-
-        // Step 1: Check if user exists in Admin collection
-        let user = await Admin.findOne({ email });
-        let role = "Admin";
-
-        if (!user) {
-            // Step 2: Check in Developer collection
-            user = await Developer.findOne({ email });
-            role = "Developer";
-        }
-        
-        if (!user) {
-            // Step 3: Check in Tester collection
-            user = await Tester.findOne({ email });
-            role = "Tester";
-        }
-
-        if (!user) {
-            // Step 4: Check in Project Manager collection
-            user = await ProjectManager.findOne({ email });
-            role = "Project Manager";
-        }
-
-        if (!user) {
-            return res.status(400).json({ error: "Invalid email or password!" });
-        }
-
-        // Step 5: Check if password is correct
-        const isMatch = password === user.password; // If using bcrypt: await bcrypt.compare(password, user.password);
-        if (!isMatch) {
-            return res.status(400).json({ error: "Invalid email or password!" });
-        }
-
-        // Step 6: Send response with user role
-        res.status(200).json({ message: "Login successful!", role });
-
-    } catch (error) {
-        console.error("Login Error:", error);
-        res.status(500).json({ error: "Internal Server Error" });
-    }
-});
 /*Login backend*/
 app.post("/api/login", async (req, res) => {
   try {
@@ -164,6 +119,122 @@ app.post("/api/login", async (req, res) => {
     res.status(500).json({ error: "Internal Server Error" });
   }
 });
+//api to fetch project details
+// 📩 Nodemailer Transporter Configuration
+const transporter = nodemailer.createTransport({
+  service: "gmail",
+  auth: {
+    user: "diyadileep0806@gmail.com", // Your email
+    pass:"djmm zavk kkxo pkik", // App password
+  },
+});
+
+// api to add new project in admin profile
+app.post('/api/add', async (req, res) => {
+  try {
+    const { project_name, manager_names, developer_names, tester_names, admin_id } = req.body;
+
+    console.log("📩 New Project Submission Received:");
+    console.log("Project Name:", project_name);
+    console.log("Managers:", manager_names);
+    console.log("Developers:", developer_names);
+    console.log("Testers:", tester_names);
+    console.log("Admin ID:", admin_id);
+    
+    const admin = await Admin.findOne({ admin_id });
+    if (!admin) return res.status(404).json({ message: "Admin not found" });
+
+
+    const companyId = admin.company_id;
+    const company = await Company.findOne({ company_id: companyId });
+    if (!company) return res.status(404).json({ message: "Company not found" });
+
+
+    const project_id = await generateUniqueId("Project");
+
+    const newProject = await Project.create({
+      project_id,
+      project_name,
+      company_id: company.company_id,
+    });
+
+    const notifyUsers = [];
+
+    const updatePeople = async (Model, names, role) => {
+      for (const name of names) {
+        let person;
+    
+        if (role === "manager") {
+          person = await Model.findOne({ manager_name: name, company_id: company.company_id });
+        } else if (role === "developer") {
+          person = await Model.findOne({ developer_name: name, company_id: company.company_id });
+        } else if (role === "tester") {
+          person = await Model.findOne({ tester_name: name, company_id: company.company_id });
+        } else {
+          console.warn(`⚠️ Unknown role: ${role}`);
+          continue;
+        }
+    
+        if (person) {
+          person.project_id.push(project_id);
+          await person.save();
+          const displayName =
+            role === "manager" ? person.manager_name :
+            role === "developer" ? person.developer_name :
+            person.tester_name;
+    
+          notifyUsers.push({ email: person.email, name: displayName });
+        } else {
+          console.warn(`⚠️ ${role} not found: ${name}`);
+        }
+      }
+    };
+    
+    // Usage
+    await updatePeople(ProjectManager, manager_names, "manager");
+    await updatePeople(Developer, developer_names, "developer");
+    await updatePeople(Tester, tester_names, "tester");
+
+    for (const { email, name } of notifyUsers) {
+      await transporter.sendMail({
+        from: '"Bug Tracker" <diyadileep0806@gmail.com>',
+        to: email,
+        subject: "You've been added to a new project",
+        text: `Hi ${name},\n\nYou have been assigned to the project "${project_name}".\n\nPlease check the dashboard for more details.`,
+      });
+      console.log(`📧 Email sent to ${name} <${email}>`);
+    }
+
+    res.status(201).json({ message: "✅ Project added and emails sent!" });
+
+  } catch (error) {
+    console.error("❌ Error adding project:", error);
+    res.status(500).json({ message: "Server error" });
+  }
+});
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 //api to fetch developer and company details
 app.get("/api/developer/:developerId", async (req, res) => {
   try {
@@ -1715,7 +1786,7 @@ app.post("/recommend", async (req, res) => {
       );
   
       // 3. Send to ML model
-      const mlResponse = await axios.post("https://d856-34-57-24-211.ngrok-free.app/predict", {
+      const mlResponse = await axios.post("https://8970-104-196-199-184.ngrok-free.app/predict", {
         candidates
       });
       

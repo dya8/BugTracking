@@ -315,10 +315,10 @@ export default function ReportBugForm() {
                   <Select name="bugType" value={formData.bugType} onChange={handleChange}>
                     <MenuItem value="UI">UI Issue</MenuItem>
                     <MenuItem value="Backend">Crash</MenuItem>
-                    <MenuItem value="Performance">Data Loss</MenuItem>
-                    <MenuItem value="Performance">Security Vulnerability</MenuItem>
-                    <MenuItem value="Performance">Performance Issue</MenuItem>
-                    <MenuItem value="Performance">Functionality Bug</MenuItem>
+                    <MenuItem value="Data Loss">Data Loss</MenuItem>
+                    <MenuItem value="Security Vulnerability">Security Vulnerability</MenuItem>
+                    <MenuItem value="Performance Issue">Performance Issue</MenuItem>
+                    <MenuItem value="Functionality">Functionality Bug</MenuItem>
                   </Select>
                 </FormControl>
               </div>
