@@ -14,6 +14,14 @@ export default function ManageUsers({adminId}) {
   const [fetchedUsers, setFetchedUsers] = useState([]);
   const [loading, setLoading] = useState(false);
   const adId = Number(adminId); // Example admin ID
+  const [currentPage, setCurrentPage] = useState(1);
+const usersPerPage = 4;
+
+const indexOfLastUser = currentPage * usersPerPage;
+const indexOfFirstUser = indexOfLastUser - usersPerPage;
+const currentUsers = fetchedUsers.slice(indexOfFirstUser, indexOfLastUser);
+const totalPages = Math.ceil(fetchedUsers.length / usersPerPage);
+
 
   const navigate = useNavigate(); // ✅ Initialize navigate
   useEffect(() => {
@@ -203,6 +211,19 @@ const handleDeleteUser = async (user) => {
 )}
         </tbody>
       </table>
+      <div className="flex justify-center mt-4 space-x-2">
+                  {Array.from({ length: totalPages }, (_, i) => (
+                    <button
+                      key={i}
+                      onClick={() => setCurrentPage(i + 1)}
+                      className={`px-3 py-1 rounded ${
+                        currentPage === i + 1 ? "bg-purple-600 text-white" : "bg-gray-200"
+                      }`}
+                    >
+                      {i + 1}
+                    </button>
+                  ))}
+                </div>
     </div>
   )}
 </div>
