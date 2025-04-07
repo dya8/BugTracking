@@ -132,10 +132,11 @@ const transporter = nodemailer.createTransport({
 // api to add new project in admin profile
 app.post('/api/add', async (req, res) => {
   try {
-    const { project_name, manager_names, developer_names, tester_names, admin_id } = req.body;
+    const { project_name,project_github_id ,manager_names, developer_names, tester_names, admin_id } = req.body;
 
     console.log("📩 New Project Submission Received:");
     console.log("Project Name:", project_name);
+    console.log("GitHub ID:", project_github_id);
     console.log("Managers:", manager_names);
     console.log("Developers:", developer_names);
     console.log("Testers:", tester_names);
@@ -156,6 +157,7 @@ app.post('/api/add', async (req, res) => {
       project_id,
       project_name,
       company_id: company.company_id,
+      git_id: project_github_id,
     });
 
     const notifyUsers = [];
@@ -212,26 +214,92 @@ app.post('/api/add', async (req, res) => {
     res.status(500).json({ message: "Server error" });
   }
 });
+/*to add users to the company*/
+// ==== Email Sender ====
+const sendEmail = async (to, subject, text) => {
+  const transporter = nodemailer.createTransport({
+    service: "gmail",
+    auth: {
+      user:"diyadileep0806@gmail.com",         // ✅ Replace with your sender Gmail
+      pass:"djmm zavk kkxo pkik"            // ✅ Replace with your app-specific password
+    }
+  });
 
+  const mailOptions = {
+    from: "Bug Tracker",
+    to,
+    subject,
+    text
+  };
 
+  await transporter.sendMail(mailOptions);
+};
+// Add user route
+app.post("/add-user", async (req, res) => {
+  try {
+    const { name, email, role, admin_id } = req.body;
 
+    // Fetch admin to get the company_id
+    const admin = await Admin.findOne({ admin_id });
+    if (!admin) {
+      return res.status(404).json({ message: "Admin not found" });
+    }
 
+    const company_id = admin.company_id;
+    const defaultPassword = "Welcome@123";
 
+    let user;
+    let roleDisplay = role.charAt(0).toUpperCase() + role.slice(1);
 
+    if (role === "developer") {
+      const developer_id = await generateUniqueId("Developer");
+      user = new Developer({
+        developer_id,
+        developer_name: name,
+        email,
+        password: defaultPassword,
+        company_id,
+        project_id: []
+      });
+    } else if (role === "tester") {
+      const tester_id = await generateUniqueId("Tester");
+      user = new Tester({
+        tester_id,
+        tester_name: name,
+        email,
+        password: defaultPassword,
+        company_id,
+        project_id: []
+      });
+    } else if (role === "manager") {
+      const manager_id = await generateUniqueId("ProjectManager");
+      user = new ProjectManager({
+        manager_id,
+        manager_name: name,
+        email,
+        password: defaultPassword,
+        company_id,
+        project_id: []
+      });
+    } else {
+      return res.status(400).json({ message: "Invalid role" });
+    }
 
+    await user.save();
 
+    // ✅ Send email
+    await sendEmail(
+      email,
+      `Welcome to Bug Tracker - ${roleDisplay}`,
+      `Hello ${name},\n\nYou have been successfully added as a ${roleDisplay} to Bug Tracker.\n\nYour login credentials:\nEmail: ${email}\nPassword: ${defaultPassword}\n\nPlease log in and change your password after your first login.\n\nBest regards,\nBug Tracker Team`
+    );
 
-
-
-
-
-
-
-
-
-
-
-
+    res.status(201).json({ message: "User added and email sent successfully" });
+  } catch (error) {
+    console.error("Error adding user:", error);
+    res.status(500).json({ message: "Server error", error });
+  }
+});
 
 
 
@@ -451,6 +519,57 @@ app.put("/api/admin/:adminId", async (req, res) => {
     res.status(500).json({ message: "Server error" });
   }
 });
+// DELETE Project Endpoint
+app.delete("/api/admin/:adminId/projects/:projectId", async (req, res) => {
+  const { adminId, projectId } = req.params;
+
+  try {
+    // ✅ Check if Admin exists
+    const admin = await Admin.findOne({ admin_id: Number(adminId) });
+    if (!admin) {
+      return res.status(404).json({ message: "Admin not found" });
+    }
+
+    // ✅ Find the Project
+    const project = await Project.findOne({ project_id: Number(projectId) });
+    if (!project) {
+      return res.status(404).json({ message: "Project not found" });
+    }
+
+    // ✅ Remove project_id from assigned Developer(s)
+    if (project.developers_ids && project.developers_ids.length > 0) {
+      await Developer.updateMany(
+        { developer_id: { $in: project.developers_ids } },
+        { $pull: { project_id: Number(projectId) } }
+      );
+    }
+
+    // ✅ Remove project_id from assigned Tester(s)
+    if (project.testers_ids && project.testers_ids.length > 0) {
+      await Tester.updateMany(
+        { tester_id: { $in: project.testers_ids } },
+        { $pull: { project_id: Number(projectId) } }
+      );
+    }
+
+    // ✅ Remove project_id from Project Manager
+    if (project.manager_id) {
+      await ProjectManager.updateOne(
+        { manager_id: project.manager_id },
+        { $pull: { project_id: Number(projectId) } }
+      );
+    }
+
+    // ✅ Delete the Project itself
+    await Project.deleteOne({ project_id: Number(projectId) });
+
+    return res.status(200).json({ message: "Project deleted successfully" });
+  } catch (error) {
+    console.error("Error deleting project:", error);
+    return res.status(500).json({ message: "Internal Server Error" });
+  }
+});
+
 
 
 // **Fetch Admin Name API**

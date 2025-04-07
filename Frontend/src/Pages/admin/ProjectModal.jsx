@@ -8,6 +8,7 @@ export default function ProjectModal({ setShowModal, adminId, onProjectAdded }) 
   const [developers, setDevelopers] = useState([]);
   const [developerInput, setDeveloperInput] = useState("");
   const [testers, setTesters] = useState([]);
+  const [githubid, setGithubId] = useState("");
   const [testerInput, setTesterInput] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false); // ✅ added
 
@@ -32,6 +33,7 @@ export default function ProjectModal({ setShowModal, adminId, onProjectAdded }) 
       manager_names: managers,
       developer_names: developers,
       tester_names: testers,
+      project_github_id: githubid,
       admin_id: adminId
     };
 
@@ -79,6 +81,16 @@ export default function ProjectModal({ setShowModal, adminId, onProjectAdded }) 
             placeholder="Project Name"
             value={projectName}
             onChange={(e) => setProjectName(e.target.value)}
+            className="w-full p-2 border rounded"
+            required
+          />
+           {/* Github Id */}
+           <input
+            type="text"
+            placeholder="Project Github Id"
+            value={githubid}
+            onChange={(e) => setGithubId(e.target.value)}
+          
             className="w-full p-2 border rounded"
             required
           />
