@@ -21,6 +21,18 @@ export default function TrackBugs() {
   // Sample bug data with Due Date & Time
   const [bugs, setBugs] = useState([]);
   const projectManagerId = 1; // Replace with actual logged-in Project Manager ID
+  
+  // Pagination state
+  const [currentPage, setCurrentPage] = useState(1);
+  const recordsPerPage = 7;
+
+  const totalPages = Math.ceil(bugs.length / recordsPerPage);
+  const paginatedBugs = bugs.slice(
+    (currentPage - 1) * recordsPerPage,
+    currentPage * recordsPerPage
+  );
+
+  const changePage = (pageNum) => setCurrentPage(pageNum);
 
   useEffect(() => {
     fetch(`http://localhost:3000/api/bugs/projmanager/${projectManagerId}`)
@@ -57,7 +69,7 @@ export default function TrackBugs() {
             </thead>
             <tbody>
               {bugs.length > 0 ? (
-                bugs.map((bug) => (
+                paginatedBugs.map((bug) => (
                   <tr key={bug.bug_id} className="border-b hover:bg-purple-100">
                     <td className="p-3">{bug.bug_name}</td>
                     <td className="p-3">{bug.project_name}</td>
@@ -95,31 +107,31 @@ export default function TrackBugs() {
           </table>
         </div>
 
-        {/* 🔥 Pagination Fix */}
-        <div className="flex justify-center mt-4">
-          <div className="flex space-x-2">
-            <button className="px-3 py-1 bg-purple-700 text-white rounded-md shadow-md">1</button>
-            <button className="px-3 py-1 bg-purple-300 text-purple-900 rounded-md hover:bg-purple-400">
-              2
-            </button>
-            <button className="px-3 py-1 bg-purple-300 text-purple-900 rounded-md hover:bg-purple-400">
-              3
-            </button>
-            <button className="px-3 py-1 bg-purple-300 text-purple-900 rounded-md hover:bg-purple-400">
-              4
-            </button>
-            <button className="px-3 py-1 bg-purple-300 text-purple-900 rounded-md hover:bg-purple-400">
-              5
-            </button>
-            <button className="px-3 py-1 bg-purple-300 text-purple-900 rounded-md hover:bg-purple-400">
-              6
-            </button>
-          </div>
+       
+          {/* Pagination controls */}
+          {totalPages > 1 && (
+            <div className="flex justify-center mt-4">
+              <div className="flex space-x-2">
+                {[...Array(totalPages)].map((_, index) => (
+                  <button
+                    key={index}
+                    onClick={() => changePage(index + 1)}
+                    className={`px-3 py-1 rounded-md transition-all ${
+                      currentPage === index + 1
+                        ? "bg-purple-700 text-white shadow-md"
+                        : "bg-purple-300 text-purple-900 hover:bg-purple-400"
+                    }`}
+                  >
+                    {index + 1}
+                  </button>
+                ))}
+              </div>
+            </div>
+          )}
         </div>
       </div>
     </div>
-  </div>
-);
+  );
 }
 
 function getStatusColor(status) {

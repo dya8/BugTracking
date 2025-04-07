@@ -122,6 +122,25 @@ const BugDetails = () => {
   
   if (!bug) return <div>Loading...</div>;
 
+  const markBugAsStuck = async () => {
+    try {
+      const response = await fetch(`http://localhost:3000/api/bugs/${id}/stuck`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+      });
+  
+      if (!response.ok) throw new Error("Failed to mark bug as stuck");
+  
+      setBug((prev) => ({ ...prev, bug_status: "Stuck" }));
+      setIsWorking(false);
+      setTimeLeft(null);
+      setMessage("🚫 Bug marked as stuck.");
+    } catch (error) {
+      console.error("Error marking bug as stuck:", error);
+      setMessage("❌ Error marking bug as stuck.");
+    }
+  };
+  
   return (
     <div className="flex h-screen bg-gray-100">
       <Sidebar />
@@ -174,6 +193,16 @@ const BugDetails = () => {
                 className="px-6 py-3 bg-green-600 text-white rounded-lg text-lg font-semibold shadow-lg">
                 Resolve
               </button>
+              
+    <div className="text-sm text-gray-600">
+      ⚠️ If you're unable to resolve this bug, click the button below:
+    </div>
+    <button
+      onClick={markBugAsStuck}
+      className="px-6 py-3 bg-red-600 text-white rounded-lg text-lg font-semibold shadow-lg"
+    >
+      I'm Stuck
+    </button>
             </div>
           )}
 

@@ -8,6 +8,8 @@ export default function VerifyBugs({testerId}) {
   const [bugs, setBugs] = useState([]); // State for bugs
   const navigate = useNavigate();
   const tid = Number(testerId); 
+  const [currentPage, setCurrentPage] = useState(1);
+  const recordsPerPage = 7;
    // Fetch resolved bugs from backend
    useEffect(() => {
     if (!tid) {
@@ -29,6 +31,16 @@ export default function VerifyBugs({testerId}) {
 
   const handleArrowClick = (bugId) => {
     navigate(`/verify-bugs/${bugId}`);
+  };
+  // Pagination calculations
+  const totalPages = Math.ceil(bugs.length / recordsPerPage);
+  const paginatedBugs = bugs.slice(
+    (currentPage - 1) * recordsPerPage,
+    currentPage * recordsPerPage
+  );
+
+  const changePage = (pageNum) => {
+    setCurrentPage(pageNum);
   };
 
   return (
@@ -54,8 +66,8 @@ export default function VerifyBugs({testerId}) {
                 </tr>
               </thead>
               <tbody>
-                {bugs.length > 0 ? (
-                  bugs.map((bug) => (
+              {paginatedBugs.length > 0 ? (
+                paginatedBugs.map((bug) => (
                     <tr key={bug.bug_id || bug.id} className="border-b hover:bg-gray-100">
                       <td className="p-3">{bug.bug_name}</td>
                       <td className="p-3">{bug.project_name || "N/A"}</td>
@@ -84,18 +96,28 @@ export default function VerifyBugs({testerId}) {
             </table>
           </div>
 
-          <div className="flex justify-center mt-4">
-            <div className="flex space-x-2">
-              <button className="px-3 py-1 bg-purple-700 text-white rounded">1</button>
-              <button className="px-3 py-1 text-purple-700">2</button>
-              <button className="px-3 py-1 text-purple-700">3</button>
-              <button className="px-3 py-1 text-purple-700">4</button>
-              <button className="px-3 py-1 text-purple-700">5</button>
-              <button className="px-3 py-1 text-purple-700">6</button>
+           {/* Pagination Controls */}
+           {totalPages > 1 && (
+            <div className="flex justify-center mt-4">
+              <div className="flex space-x-2">
+                {[...Array(totalPages)].map((_, index) => (
+                  <button
+                    key={index}
+                    onClick={() => changePage(index + 1)}
+                    className={`px-3 py-1 rounded ${
+                      currentPage === index + 1
+                        ? "bg-purple-700 text-white"
+                        : "text-purple-700 bg-white border border-purple-300"
+                    }`}
+                  >
+                    {index + 1}
+                  </button>
+                ))}
+              </div>
             </div>
-          </div>
+           )}
+           </div>
         </div>
-      </div>
     </div>
   );
 }

@@ -7,7 +7,15 @@ export default function ReportedBugs() {
   const [managerid,setManagerid]=useState(1);
   // Fetch bugs from API
   const [bugs, setBugs] = useState([]);
+  const [currentPage, setCurrentPage] = useState(1);
+const recordsPerPage = 7;
 
+const totalPages = Math.ceil(bugs.length / recordsPerPage);
+const paginatedBugs = bugs.slice(
+  (currentPage - 1) * recordsPerPage,
+  currentPage * recordsPerPage
+);
+const changePage = (pageNum) => setCurrentPage(pageNum);
   // Fetch bugs from API
   useEffect(() => {
     const fetchBugs = async () => {
@@ -52,8 +60,8 @@ export default function ReportedBugs() {
                 </tr>
               </thead>
               <tbody>
-                {bugs.length > 0 ? (
-                  bugs.map((bug, index) => (
+                {paginatedBugs.length > 0 ? (
+                  paginatedBugs.map((bug, index) => (
                     <tr key={index} className="border-b hover:bg-gray-100">
                       <td className="p-3">{bug.bug_name}</td>
                       <td className="p-3">{bug.project_name}</td>
@@ -72,21 +80,25 @@ export default function ReportedBugs() {
             </table>
           </div>
 
-          {/* Pagination */}
-          <div className="flex justify-center mt-4">
-            <div className="flex space-x-2">
-              {[1, 2, 3, 4, 5, 6].map((page) => (
-                <button
-                  key={page}
-                  className={`px-3 py-1 rounded ${
-                    page === 1 ? "bg-purple-700 text-white" : "text-purple-700"
-                  }`}
-                >
-                  {page}
-                </button>
-              ))}
-            </div>
-          </div>
+          {totalPages > 1 && (
+  <div className="flex justify-center mt-4">
+    <div className="flex space-x-2">
+      {[...Array(totalPages)].map((_, index) => (
+        <button
+          key={index}
+          onClick={() => changePage(index + 1)}
+          className={`px-3 py-1 rounded-md transition-all ${
+            currentPage === index + 1
+              ? "bg-purple-700 text-white shadow-md"
+              : "bg-purple-200 text-purple-800 hover:bg-purple-300"
+          }`}
+        >
+          {index + 1}
+        </button>
+      ))}
+    </div>
+  </div>
+)}
         </div>
       </div>
     </div>

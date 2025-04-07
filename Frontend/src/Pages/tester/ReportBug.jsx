@@ -300,27 +300,57 @@ export default function ReportBugForm() {
 
 
 
-                <FormControl fullWidth variant="outlined">
-                  <InputLabel>Priority</InputLabel>
-                  <Select name="priority" value={formData.priority} onChange={handleChange}>
-                    <MenuItem value="Low">Low</MenuItem>
-                    <MenuItem value="Medium">Medium</MenuItem>
-                    <MenuItem value="High">High</MenuItem>
-                    <MenuItem value="Critical">Critical</MenuItem>
-                  </Select>
-                </FormControl>
+<FormControl fullWidth variant="outlined">
+  <InputLabel>Bug type</InputLabel>
+  <Select
+    name="bugType"
+    value={formData.bugType}
+    onChange={(e) => {
+      const value = e.target.value;
+      const prioritySuggestion = {
+        "UI": "Low",
+        "Backend": "High",
+        "Data Loss": "Critical",
+        "Security Vulnerability": "Critical",
+        "Performance Issue": "Medium",
+        "Functionality": "High",
+      }[value] || "";
 
-                <FormControl fullWidth variant="outlined">
-                  <InputLabel>Bug type</InputLabel>
-                  <Select name="bugType" value={formData.bugType} onChange={handleChange}>
-                    <MenuItem value="UI">UI Issue</MenuItem>
-                    <MenuItem value="Backend">Crash</MenuItem>
-                    <MenuItem value="Data Loss">Data Loss</MenuItem>
-                    <MenuItem value="Security Vulnerability">Security Vulnerability</MenuItem>
-                    <MenuItem value="Performance Issue">Performance Issue</MenuItem>
-                    <MenuItem value="Functionality">Functionality Bug</MenuItem>
-                  </Select>
-                </FormControl>
+      setFormData((prev) => ({
+        ...prev,
+        bugType: value,
+        priority: prioritySuggestion, // update priority based on bug type
+      }));
+    }}
+  >
+    <MenuItem value="UI">UI Issue</MenuItem>
+    <MenuItem value="Backend">Crash</MenuItem>
+    <MenuItem value="Data Loss">Data Loss</MenuItem>
+    <MenuItem value="Security Vulnerability">Security Vulnerability</MenuItem>
+    <MenuItem value="Performance Issue">Performance Issue</MenuItem>
+    <MenuItem value="Functionality">Functionality Bug</MenuItem>
+  </Select>
+</FormControl>
+
+<FormControl fullWidth variant="outlined">
+  <InputLabel>Priority</InputLabel>
+  <Select
+    name="priority"
+    value={formData.priority}
+    onChange={handleChange}
+    label="Priority"
+  >
+    <MenuItem value="Low">Low</MenuItem>
+    <MenuItem value="Medium">Medium</MenuItem>
+    <MenuItem value="High">High</MenuItem>
+    <MenuItem value="Critical">Critical</MenuItem>
+  </Select>
+  <p style={{ fontSize: "0.8rem", color: "#6b7280", marginTop: "4px" }}>
+     Priority suggested based on bug type. Feel free to adjust!
+  </p>
+</FormControl>
+
+
               </div>
 
               <div className="col-span-2 flex justify-between mt-6">

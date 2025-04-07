@@ -6,7 +6,8 @@ export default function ReportedBugs() {
   const [bugs, setBugs] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
-
+  const [currentPage, setCurrentPage] = useState(1);
+  const recordsPerPage = 7;
   useEffect(() => {
     const fetchBugs = async () => {
       try {
@@ -26,7 +27,16 @@ export default function ReportedBugs() {
 
     fetchBugs();
   }, []);
+  // Pagination logic
+  const totalPages = Math.ceil(bugs.length / recordsPerPage);
+  const paginatedBugs = bugs.slice(
+    (currentPage - 1) * recordsPerPage,
+    currentPage * recordsPerPage
+  );
 
+  const changePage = (pageNum) => {
+    setCurrentPage(pageNum);
+  };
   return (
     <div className="flex h-screen">
       <Sidebar />
@@ -58,8 +68,9 @@ export default function ReportedBugs() {
                     </tr>
                   </thead>
                   <tbody>
-                    {bugs.length > 0 ? (
-                      bugs.map((bug) => (
+                  {paginatedBugs.length > 0 ? (
+  paginatedBugs.map((bug) => (
+
                         <tr key={bug.bug_id} className="border-b hover:bg-gray-100">
   <td className="p-3">{bug.bug_name}</td>
   <td className="p-3">{bug.project_name}</td>
@@ -82,7 +93,27 @@ export default function ReportedBugs() {
                   </tbody>
                 </table>
               </div>
-            </>
+              {/* Pagination controls */}
+              {totalPages > 1 && (
+                <div className="flex justify-center mt-4">
+                  <div className="flex space-x-2">
+                    {[...Array(totalPages)].map((_, index) => (
+                      <button
+                        key={index}
+                        onClick={() => changePage(index + 1)}
+                        className={`px-3 py-1 rounded ${
+                          currentPage === index + 1
+                            ? "bg-purple-700 text-white"
+                            : "text-purple-700 bg-white border border-purple-300"
+                        }`}
+                      >
+                        {index + 1}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              )}
+              </>
           )}
         </div>
       </div>

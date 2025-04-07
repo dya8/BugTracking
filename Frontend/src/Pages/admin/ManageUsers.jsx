@@ -189,8 +189,8 @@ const handleDeleteUser = async (user) => {
           </tr>
         </thead>
         <tbody> 
-        {Array.isArray(fetchedUsers) && fetchedUsers.length > 0 ? (
-  fetchedUsers.map((user, index) => (
+        {Array.isArray(currentUsers) && currentUsers.length > 0 ? (
+  currentUsers.map((user, index) => (
     <tr key={index} className="border-b hover:bg-gray-100">
       <td className="p-3 border">{user.name}</td>
       <td className="p-3 border">{user.role}</td>
@@ -207,7 +207,7 @@ const handleDeleteUser = async (user) => {
     </tr>
   ))
 ) : (
-  <p className="text-gray-500">{fetchedUsers.length === 0 ? "No users found." : "Error fetching users."}</p>
+  <p className="text-gray-500">{currentUsers.length === 0 ? "No users found." : "Error fetching users."}</p>
 )}
         </tbody>
       </table>

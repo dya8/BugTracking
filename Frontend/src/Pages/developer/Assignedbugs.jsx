@@ -10,6 +10,18 @@ const AssignedBugs= ({ userId }) => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const developerId= Number(userId);
+  const [currentPage, setCurrentPage] = useState(1);
+  const recordsPerPage = 7;
+  
+  // Pagination logic
+  const totalPages = Math.ceil(bugs.length / recordsPerPage);
+  const paginatedBugs = bugs.slice(
+    (currentPage - 1) * recordsPerPage,
+    currentPage * recordsPerPage
+  );
+
+  const changePage = (pageNum) => setCurrentPage(pageNum);
+
   console.log(`Sending developerid as: ${developerId}, Type: ${typeof developerId}`);
   useEffect(() => {
     if (!developerId) return; // Ensure developerId is available
@@ -52,6 +64,7 @@ const AssignedBugs= ({ userId }) => {
             ) : error ? (
               <p className="text-red-600">Error: {error}</p>
             ) : (
+              <>
               <table className="w-full text-left border-collapse">
                 <thead>
                   <tr className="bg-purple-200 text-purple-800">
@@ -65,7 +78,7 @@ const AssignedBugs= ({ userId }) => {
                 </thead>
                 <tbody>
                   {bugs.length > 0 ? (
-                    bugs.map((bug) => <BugRow key={bug.bug_id} bug={bug} />)
+                    paginatedBugs.map((bug) => <BugRow key={bug.bug_id} bug={bug} />)
                   ) : (
                     <tr>
                       <td colSpan="6" className="text-center p-3">
@@ -75,6 +88,28 @@ const AssignedBugs= ({ userId }) => {
                   )}
                 </tbody>
               </table>
+            
+               {/* Pagination controls */}
+               {totalPages > 1 && (
+                <div className="flex justify-center mt-4">
+                  <div className="flex space-x-2">
+                    {[...Array(totalPages)].map((_, index) => (
+                      <button
+                        key={index}
+                        onClick={() => changePage(index + 1)}
+                        className={`px-3 py-1 rounded ${
+                          currentPage === index + 1
+                            ? "bg-purple-700 text-white"
+                            : "text-purple-700 bg-white border border-purple-300"
+                        }`}
+                      >
+                        {index + 1}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              )}
+            </>
             )}
           </div>
         </div>

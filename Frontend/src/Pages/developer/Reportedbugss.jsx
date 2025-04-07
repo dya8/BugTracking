@@ -6,6 +6,8 @@ export default function AssignedBugss({userId}) {
  // const [developerid, setDeveloperid] = useState(); // Set the logged-in developer's ID
   const [bugs, setBugs] = useState([]);
   const developerid = Number(userId); // Assuming you have the developer ID from props or context
+  const [currentPage, setCurrentPage] = useState(1);
+  const recordsPerPage = 7;
   useEffect(() => {
     const fetchBugs = async () => {
       try {
@@ -19,7 +21,15 @@ export default function AssignedBugss({userId}) {
     };
     fetchBugs();
   }, [developerid]);
+  
+  // Pagination logic
+  const totalPages = Math.ceil(bugs.length / recordsPerPage);
+  const paginatedBugs = bugs.slice(
+    (currentPage - 1) * recordsPerPage,
+    currentPage * recordsPerPage
+  );
 
+  const changePage = (pageNum) => setCurrentPage(pageNum);
   return (
     <div className="flex h-screen">
       <Sidebar />
@@ -44,8 +54,8 @@ export default function AssignedBugss({userId}) {
                 </tr>
               </thead>
               <tbody>
-                {bugs.length > 0 ? (
-                  bugs.map((bug, index) => (
+                {paginatedBugs.length > 0 ? (
+                  paginatedBugs.map((bug, index) => (
                     <tr key={index} className="border-b hover:bg-gray-100">
                       <td className="p-3">{bug.bug_name}</td>
                       <td className="p-3">{bug.project_name}</td>
@@ -72,24 +82,29 @@ export default function AssignedBugss({userId}) {
               </tbody>
             </table>
           </div>
-
-          {/* Pagination (optional) */}
-          <div className="flex justify-center mt-4">
-            <div className="flex space-x-2">
-              {[1, 2, 3].map((page) => (
-                <button
-                  key={page}
-                  className={`px-3 py-1 rounded ${
-                    page === 1 ? "bg-purple-700 text-white" : "text-purple-700"
-                  }`}
-                >
-                  {page}
-                </button>
-              ))}
+                {/* Pagination */}
+          {totalPages > 1 && (
+            <div className="flex justify-center mt-4">
+              <div className="flex space-x-2">
+                {Array.from({ length: totalPages }, (_, i) => i + 1).map((page) => (
+                  <button
+                    key={page}
+                    onClick={() => changePage(page)}
+                    className={`px-3 py-1 rounded ${
+                      currentPage === page
+                        ? "bg-purple-700 text-white"
+                        : "text-purple-700 bg-white border border-purple-300"
+                    }`}
+                  >
+                    {page}
+                  </button>
+                ))}
+              </div>
             </div>
-          </div>
+          )}
         </div>
       </div>
     </div>
   );
 }
+          

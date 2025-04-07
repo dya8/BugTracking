@@ -2141,6 +2141,7 @@ app.get('/api/admin/:adminId/projects', async (req, res) => {
       const manager = await ProjectManager.findOne({ project_id: project.project_id });
 
       return {
+        project_id:project.project_id,
         project_name: project.project_name,
         git_id: project.git_id,
         developers_count: developers.length,
@@ -2235,52 +2236,116 @@ app.get('/api/projects', async (req, res) => {
   }
 });
 /*Manage team backend for project manager*/
-
-//Fetching users by manager
 app.get("/api/project-users/:managerId", async (req, res) => {
   try {
-      console.log("Raw Manager ID from request:", req.params.managerId);
-      const managerId = Number(req.params.managerId);
-      console.log("Manager ID received:", managerId);
+    const managerId = Number(req.params.managerId);
+    console.log("Manager ID received:", managerId);
 
-      // Step 1: Find the Project IDs from the Project Manager Table
-      const projectManager = await ProjectManager.findOne({ manager_id: managerId });
+    // Step 1: Get projects managed by this manager
+    const projectManager = await ProjectManager.findOne({ manager_id: managerId });
+    if (!projectManager) {
+      return res.status(404).json({ message: "Project Manager not found" });
+    }
 
-      if (!projectManager) {
-          return res.status(404).json({ message: "Project Manager not found" });
+    const managerProjectIds = projectManager.project_id;
+    console.log("Manager's Project IDs:", managerProjectIds);
+
+    // Step 2: Fetch project names for mapping
+    const projects = await Project.find({ project_id: { $in: managerProjectIds } }).select("project_id project_name");
+    const projectMap = {};
+    projects.forEach(project => {
+      projectMap[project.project_id] = project.project_name;
+    });
+
+    // Step 3: Fetch developers and testers
+    const developers = await Developer.find({ project_id: { $in: managerProjectIds } }).select("developer_id developer_name project_id");
+    const testers = await Tester.find({ project_id: { $in: managerProjectIds } }).select("tester_id tester_name project_id");
+
+    // Step 4: Format the response
+    const users = [];
+
+    developers.forEach(dev => {
+      const matchedProjectId = dev.project_id.find(pid => managerProjectIds.includes(pid));
+      if (matchedProjectId) {
+        users.push({
+          id: dev.developer_id,
+          name: dev.developer_name,
+          role: "Developer",
+          project_name: projectMap[matchedProjectId] || "Unknown"
+        });
       }
+    });
 
-      const projectIds = projectManager.project_id; // This is an array
-      console.log("Project IDs fetched:", projectIds);
+    testers.forEach(tester => {
+      const matchedProjectId = tester.project_id.find(pid => managerProjectIds.includes(pid));
+      if (matchedProjectId) {
+        users.push({
+          id: tester.tester_id,
+          name: tester.tester_name,
+          role: "Tester",
+          project_name: projectMap[matchedProjectId] || "Unknown"
+        });
+      }
+    });
 
-      // Step 2: Fetch Developers and Testers matching any of the Project IDs
-      const developers = await Developer.find({ project_id: { $in: projectIds } })
-          .select("developer_id developer_name");
-
-      const testers = await Tester.find({ project_id: { $in: projectIds } })
-          .select("tester_id tester_name");
-
-      // Step 3: Format the response
-      const users = [
-          ...developers.map(user => ({
-              id: user.developer_id,
-              name: user.developer_name,
-              role: "Developer"
-          })),
-          ...testers.map(user => ({
-              id: user.tester_id,
-              name: user.tester_name,
-              role: "Tester"
-          }))
-      ];
-
-      res.json(users);
+    res.json(users);
   } catch (error) {
-      console.error("Error fetching project users:", error);
-      res.status(500).json({ message: "Server error" });
+    console.error("Error fetching project users:", error);
+    res.status(500).json({ message: "Server error" });
   }
 });
 
+// DELETE Project Endpoint
+app.delete("/api/admin/:adminId/projects/:projectId", async (req, res) => {
+  const { adminId, projectId } = req.params;
+  console.log("Received Project ID:", projectId);
+
+  try {
+    // ✅ Check if Admin exists
+    const admin = await Admin.findOne({ admin_id: Number(adminId) });
+    if (!admin) {
+      return res.status(404).json({ message: "Admin not found" });
+    }
+
+    // ✅ Find the Project
+    const project = await Project.findOne({ project_id: Number(projectId) });
+    if (!project) {
+      return res.status(404).json({ message: "Project not found" });
+    }
+
+    // ✅ Remove project_id from assigned Developer(s)
+    if (project.developers_ids && project.developers_ids.length > 0) {
+      await Developer.updateMany(
+        { developer_id: { $in: project.developers_ids } },
+        { $pull: { project_id: Number(projectId) } }
+      );
+    }
+
+    // ✅ Remove project_id from assigned Tester(s)
+    if (project.testers_ids && project.testers_ids.length > 0) {
+      await Tester.updateMany(
+        { tester_id: { $in: project.testers_ids } },
+        { $pull: { project_id: Number(projectId) } }
+      );
+    }
+
+    // ✅ Remove project_id from Project Manager
+    if (project.manager_id) {
+      await ProjectManager.updateOne(
+        { manager_id: project.manager_id },
+        { $pull: { project_id: Number(projectId) } }
+      );
+    }
+
+    // ✅ Delete the Project itself
+    await Project.deleteOne({ project_id: Number(projectId) });
+
+    return res.status(200).json({ message: "Project deleted successfully" });
+  } catch (error) {
+    console.error("Error deleting project:", error);
+    return res.status(500).json({ message: "Internal Server Error" });
+  }
+});
 
 // ✅ Fetch project statistics
 app.get('/api/project-stats/:projectName', async (req, res) => {
