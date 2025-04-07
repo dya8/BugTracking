@@ -2,10 +2,10 @@ import React, { useState, useEffect } from "react";
 import Sidebar from "./Sidebar";
 import Navbar from "./Navbar";
 
-export default function AssignedBugss() {
-  const [developerid, setDeveloperid] = useState(1); // Set the logged-in developer's ID
+export default function AssignedBugss({userId}) {
+ // const [developerid, setDeveloperid] = useState(); // Set the logged-in developer's ID
   const [bugs, setBugs] = useState([]);
-
+  const developerid = Number(userId); // Assuming you have the developer ID from props or context
   useEffect(() => {
     const fetchBugs = async () => {
       try {

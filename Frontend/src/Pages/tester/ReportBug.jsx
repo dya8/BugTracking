@@ -9,7 +9,7 @@ import axios from "axios";
 import { Tooltip } from "@mui/material";
 
 export default function ReportBugForm() {
-  const [testId,setTesterId] =useState(1);
+  const [testerId,setTesterId] =useState(1);
   const [loading, setLoading] = useState(false);
   const [projects, setProjects] = useState([]);
   const [assignedTo, setAssignedTo] = useState('');
@@ -31,7 +31,7 @@ export default function ReportBugForm() {
   useEffect(() => {
     async function fetchProjects() {
       try {
-        const response = await axios.get(`http://localhost:3000/api/tester/${testId}/projects`);
+        const response = await axios.get(`http://localhost:3000/api/tester/${testerId}/projects`);
         setProjects(response.data.projects);
       } catch (error) {
         console.error("Error fetching projects:", error);
@@ -39,7 +39,7 @@ export default function ReportBugForm() {
       }
     }
     fetchProjects();
-  }, [testId]);
+  }, [testerId]);
 
   // Fetch developers when project changes
   useEffect(() => {
@@ -119,7 +119,7 @@ export default function ReportBugForm() {
 
   // Handle final submission
   const handleSubmit = async () => {
-    if (!testId) {
+    if (!testerId) {
       console.error("Tester ID not available!");
       return;
     }
@@ -158,7 +158,7 @@ export default function ReportBugForm() {
 
           {loading ? (
             <p>Loading tester details...</p>
-          ) : !testId ? (
+          ) : !testerId ? (
             <p className="text-red-500">Error: Unable to fetch tester details.</p>
           ) : (
             <div className="grid grid-cols-2 gap-6">

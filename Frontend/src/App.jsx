@@ -86,7 +86,7 @@ function App() {
       <Route path="/report-bug" element={<ReportBug/>} />
       <Route path="/dashboard/:dashboardId" element={<Dashboard setTesterId={setTesterId}/>}/>
       {/*<Route path="/dashboard" element={<Dashboard/>} />*/}
-      <Route path="/chat-room" element={<ChatroomTester />} />
+      <Route path="/chat-room" element={<ChatroomTester testerId={testerId} />} />
       <Route path="/projects" element={<CurrentProjects testerId={testerId}/>} />
       <Route path="/tester-settings" element={<Tester_Settings testerId={testerId}/>}/>
       <Route path="/settings" element={<Settings userId={userId}/>} />
@@ -95,7 +95,7 @@ function App() {
       <Route path="/project" element={<Projects userId={userId}/>} />
       <Route path="/assigned-bugs" element={<AssignedBugs userId={userId}/>} />
       <Route path="/bug-details/:id" element={<BugDetails/>} />
-      <Route path="/chatroom" element={<Chatroom/>} />
+      <Route path="/chatroom" element={<Chatroom userId={userId}/>} />
       <Route path="/notifications" element={<Notifications/>} />
       <Route path="/trackbug/:id" element={<BugDetailsM/>} />
       <Route path="/manage-team" element={<ManageTeam managerId={managerId}/>}/>
@@ -106,7 +106,7 @@ function App() {
       <Route path="/assign-due" element={<AssignDue/>}/>
       <Route path="/assign-due/bug/:id" element={<AssignDuePage/>} />
       <Route path="/reportedbugs" element={<BugReport/>}/>
-      <Route path ="/verify-bugs" element={<VerifyBugs/>}/>
+      <Route path ="/verify-bugs" element={<VerifyBugs testerId={testerId}/>}/>
       <Route path ="/verify-bugs/:bugId" element={<VerifyBugDetails/>}/>
       {/*Pass setuserid to update userid in dashboard*/ }
       <Route path="/devdashboard/:dashboardId" element={<Devdashboard setUserId={setUserId}/>}/>
@@ -119,7 +119,7 @@ function App() {
       <Route path="/project-stats/:projectName" element={<ProjectStats />} />
       <Route path="/project-statsT/:projectName" element={<ProjectStatsT />} />
       <Route path="/project-statsD/:projectName" element={<ProjectStatsD />} />
-      <Route path="/allbugs" element={<AssignedBugss/>}/>
+      <Route path="/allbugs" element={<AssignedBugss userId={userId}/>}/>
       <Route path="/project-statsM/:projectName" element={<ProjectStatsM />} />
      </Routes>
        </Router>

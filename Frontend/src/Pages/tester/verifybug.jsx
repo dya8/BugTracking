@@ -4,18 +4,18 @@ import Navbar from "./Navbar";
 import { FaChevronRight } from "react-icons/fa";
 import { useNavigate } from "react-router-dom";
 
-export default function VerifyBugs() {
+export default function VerifyBugs({testerId}) {
   const [bugs, setBugs] = useState([]); // State for bugs
   const navigate = useNavigate();
-  const testerId = 1; 
+  const tid = Number(testerId); 
    // Fetch resolved bugs from backend
    useEffect(() => {
-    if (!testerId) {
+    if (!tid) {
       console.error("Tester ID not found");
       return;
     }
 
-    fetch(`http://localhost:3000/api/resolved/${testerId}`)
+    fetch(`http://localhost:3000/api/resolved/${tid}`)
       .then((res) => res.json())
       .then((data) => {
         if (data.error || data.message) {
@@ -25,7 +25,7 @@ export default function VerifyBugs() {
         }
       })
       .catch((err) => console.error("Error fetching bugs:", err));
-  }, [testerId]);
+  }, [tid]);
 
   const handleArrowClick = (bugId) => {
     navigate(`/verify-bugs/${bugId}`);

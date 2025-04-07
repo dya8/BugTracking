@@ -7,13 +7,13 @@ import Navbar from "./Navbar";
 
 const socket = io("http://localhost:3000"); // Adjust backend URL if needed
 
-const ChatroomTester = () => {
+const ChatroomTester = ({testerId}) => {
   const [developers, setDevelopers] = useState([]);
   const [selectedDeveloper, setSelectedDeveloper] = useState(null);
   const [messages, setMessages] = useState([]);
   const [newMessage, setNewMessage] = useState("");
   const [unreadMessages, setUnreadMessages] = useState({}); // Store unread count per developer
-  const tester_id = 1; // Replace with actual logged-in tester ID
+  const tester_id = Number(testerId); // Replace with actual logged-in tester ID
 
   // Fetch developers assigned to this tester
   useEffect(() => {

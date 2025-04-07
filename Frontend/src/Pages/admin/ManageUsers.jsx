@@ -54,49 +54,7 @@ export default function ManageUsers({adminId}) {
   
     if (adId) fetchUsers(); // Only fetch if adminId is valid
   }, [adId]);
-  /*const handleDeleteUser = async (user) => {
-    console.log("Full User Object:", user);  // Debugging
 
-    // Check what keys exist in the user object
-    console.log("User Keys:", Object.keys(user));
-
-    let userId;
-    if (user.role === "Developer") userId = user.developer_id;
-    else if (user.role === "Tester") userId = user.tester_id;
-    else if (user.role === "Project Manager") userId = user.manager_id;
-    else {
-        alert("Invalid role detected.");
-        return;
-    }
-
-    console.log("Converted userId:", userId);  // Debugging
-
-    if (!userId || isNaN(Number(userId))) {
-        alert("Invalid user ID received.");
-        return;
-    }
-
-    const confirmDelete = window.confirm(`Are you sure you want to delete ${user.name}?`);
-    if (!confirmDelete) return;
-
-    try {
-        const response = await fetch(`http://localhost:3000/api/users/${userId}?role=${user.role}`, {
-            method: "DELETE",
-        });
-
-        const data = await response.json();
-
-        if (response.ok) {
-            alert(data.message);
-            setFetchedUsers(fetchedUsers.filter(u => u.id !== userId));
-        } else {
-            alert("Failed to delete user: " + data.message);
-        }
-    } catch (error) {
-        console.error("Error deleting user:", error);
-        alert("An error occurred while deleting the user.");
-    }
-};*/
 const handleDeleteUser = async (user) => {
   console.log("Full User Object:", user);
 
@@ -248,22 +206,6 @@ const handleDeleteUser = async (user) => {
     </div>
   )}
 </div>
-
-          {/* Display Added Users */}
-          {/*<div className="mt-5 bg-white p-4 shadow rounded-lg">
-            <h2 className="text-lg font-semibold mb-3">Users</h2>
-            {addedUsers.length === 0 ? (
-              <p className="text-gray-500">No users added yet.</p>
-            ) : (
-              <ul>
-                {addedUsers.map((user, index) => (
-                  <li key={index} className="border-b py-2 flex justify-between">
-                    <span>{user.email} - {user.role}</span>
-                  </li>
-                ))}
-              </ul>
-            )}
-          </div>*/}
         </div>
 
         {/* Add Users Popup */}

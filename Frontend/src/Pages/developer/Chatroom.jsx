@@ -3,12 +3,12 @@ import axios from "axios";
 import Sidebar from "./sidebar";
 import Navbar from "./navbar";
 import socket from "@/socket";
-const Chatroom = () => {
+const Chatroom = ({userId}) => {
   const [testers, setTesters] = useState([]);
   const [selectedTester, setSelectedTester] = useState(null);
   const [messages, setMessages] = useState([]);
   const [newMessage, setNewMessage] = useState("");
-  const developer_id = 1; // Replace with the actual logged-in developer ID
+  const developer_id = Number(userId); // Replace with the actual logged-in developer ID
   useEffect(() => {
     console.log("🔌 Connecting to socket...");
     if (!socket.connected) {

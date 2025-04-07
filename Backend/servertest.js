@@ -677,7 +677,7 @@ app.post("/api/bugs/report", async (req, res) => {
         await newBug.save();
         res.status(201).json({ message: "Bug reported successfully", bug: newBug });
         // Fetch developer details
-    const developer = await Developer.findById(assigned_to);
+        const developer = await Developer.findOne({ developer_id: Number(assigned_to) });
     if (!developer) {
       return res.status(404).json({ message: "Developer not found" });
     }
@@ -696,7 +696,7 @@ app.post("/api/bugs/report", async (req, res) => {
       to: developer.email, // developer's email from DB
       subject: `New Bug Assigned: ${bug_name}`,
       text: `
-        Hello ${developer.name},
+        Hello ${developer.developer_name},
 
         A new bug has been assigned to you in project ID: ${project_id}.
 
@@ -838,32 +838,95 @@ app.put("/api/bugs/resolve/:id", async (req, res) => {
       );
   
       if (!bug) return res.status(404).json({ message: "Bug not found" });
+      // 2. Get project_id from bug
+    const projectId = bug.project_id;
   
-      res.json({ message: "Bug resolved successfully", bug });
-    } catch (error) {
-      console.error("Error resolving bug:", error);
-      res.status(500).json({ message: "Server error", error: error.message });
-    }
-  });
+   // ✅ Fetch tester details
+   
+   const tester = await Tester.findOne({ project_id: projectId });
+   const project = await Project.findOne({ project_id: projectId });
 
+   if (!tester) {
+     return res.status(404).json({ message: "Tester not found for this bug." });
+   }
+
+   // ✅ Nodemailer config
+   const transporter = nodemailer.createTransport({
+     service: "gmail",
+     auth: {
+       user: "diyadileep0806@gmail.com",
+       pass: "djmm zavk kkxo pkik", // Replace with env variable in production
+     },
+   });
+
+   const mailOptions = {
+     from: "BugTracker <diyadileep0806@gmail.com>",
+     to: tester.email,
+     subject: `✅ Bug Resolved - Bug ID ${bug.bug_id}`,
+     text: `Hello ${tester.tester_name},\n\nThe bug titled "${bug.bug_name}" in the project "${project?.project_name || "Unknown"}" (Project ID: ${bug.project_id}) has been marked as RESOLVED.\n\nPlease verify it and close the issue.\n\nRegards,\nBug Tracking System`,
+   };
+
+   await transporter.sendMail(mailOptions);
+
+   res.json({ message: "Bug resolved and email sent to tester", bug });
+ } catch (error) {
+   console.error("Error resolving bug:", error);
+   res.status(500).json({ message: "Server error", error: error.message });
+ }
+});
 // Mark bug as Stuck
 app.put("/api/bugs/:id/stuck", async (req, res) => {
-    try {
-      const bug = await Bug.findOneAndUpdate(
-        { bug_id: Number(req.params.id) },
-        { bug_status: "Stuck" },
-        { new: true }
-      );
-  
-      if (!bug) return res.status(404).json({ message: "Bug not found" });
-  
-      res.json({ message: "Bug marked as Stuck", bug });
-    } catch (error) {
-      console.error("Error updating bug to Stuck:", error);
-      res.status(500).json({ message: "Server error", error: error.message });
+  try {
+    // 1. Update bug status to "Stuck"
+    const bug = await Bug.findOneAndUpdate(
+      { bug_id: Number(req.params.id) },
+      { bug_status: "Stuck" },
+      { new: true }
+    );
+
+    if (!bug) return res.status(404).json({ message: "Bug not found" });
+
+    // 2. Get project_id from bug
+    const projectId = bug.project_id;
+
+    // 3. Get project details (optional, for name)
+    const project = await Project.findOne({ project_id: projectId });
+
+    // 4. Get project manager using project_id
+    const manager = await ProjectManager.findOne({ project_id: projectId });
+
+    if (!manager) {
+      return res.status(404).json({ message: "Project Manager not found for this project." });
     }
-  });
-  
+
+    // 5. Set up Nodemailer
+    const transporter = nodemailer.createTransport({
+      service: "gmail",
+      auth: {
+        user: "diyadileep0806@gmail.com", // your email
+        pass: "djmm zavk kkxo pkik",      // app password
+      },
+    });
+
+    // 6. Mail content
+    const mailOptions = {
+      from: "BugTracker <diyadileep0806@gmail.com>",
+      to: manager.email,
+      subject: `⚠️ Bug Stuck Alert - Bug ID ${bug.bug_id}`,
+      text: `Hello ${manager.manager_name},\n\nThe bug titled "${bug.bug_name}" in project "${project?.project_name || 'Unknown'}" (Project ID: ${projectId}) has been marked as STUCK due to time expiration.\n\nPlease review and take necessary action.\n\nRegards,\nBug Tracking System`,
+    };
+
+    // 7. Send the email
+    await transporter.sendMail(mailOptions);
+
+    res.json({ message: "Bug marked as Stuck and email sent to Project Manager", bug });
+
+  } catch (error) {
+    console.error("Error marking bug as stuck:", error);
+    res.status(500).json({ message: "Server error", error: error.message });
+  }
+});
+
 
 app.get("/api/bugs",async(req,res) => {
     try{
@@ -1198,13 +1261,44 @@ app.put("/api/bugsM/:bugId/update", async (req, res) => {
       if (!updatedBug) {
         return res.status(404).json({ error: "Bug not found" });
       }
+       // ✅ Find the developer's email
+    const developer = await Developer.findOne({ developer_id: assignedTo });
+
   
-      res.json({ message: "Bug updated successfully!", updatedBug });
-    } catch (error) {
-      console.error("Error updating bug:", error);
-      res.status(500).json({ error: "Server error" });
+    if (developer && developer.email) {
+     // 📩 Nodemailer Transporter Configuration
+     const transporter = nodemailer.createTransport({
+       service: "gmail",
+       auth: {
+         user: "diyadileep0806@gmail.com", // Your email
+         pass:"djmm zavk kkxo pkik", // App password
+       },
+     });
+
+      // ✅ Compose email
+      const mailOptions = {
+        from:"BugTracker",
+        to: developer.email,
+        subject: `🔁 Bug Reassigned (Bug ID: ${bugId})`,
+        html: `
+          <p>Hi ${developer.developer_name},</p>
+          <p>You’ve been assigned a new bug (ID: <strong>${bugId}</strong>).</p>
+          <p><strong>New Due Date:</strong> ${new Date(dueDate).toLocaleString()}</p>
+          <p>Please check the bug tracking system for more details.</p>
+          <br/>
+          <p>— Bug Tracker Team</p>
+        `,
+      };
+
+      await transporter.sendMail(mailOptions);
     }
-  });
+
+    res.json({ message: "Bug updated and email sent successfully!", updatedBug });
+  } catch (error) {
+    console.error("Error updating bug:", error);
+    res.status(500).json({ error: "Server error" });
+  }
+});
 //fetch dev names for stuck bugs
 app.get("/api/projects/:projectId/developers", async (req, res) => {
     const projectId = req.params.projectId;

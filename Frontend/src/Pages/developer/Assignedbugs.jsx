@@ -4,7 +4,7 @@ import { useNavigate } from "react-router-dom";
 import Sidebar from "./sidebar";
 import Navbar from "./navbar";
 
-const AssignedBugs = ({ userId }) => {
+const AssignedBugs= ({ userId }) => {
   const navigate = useNavigate();
   const [bugs, setBugs] = useState([]);
   const [loading, setLoading] = useState(true);
