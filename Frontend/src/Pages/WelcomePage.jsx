@@ -11,14 +11,15 @@ const WelcomePage = () => {
 
   return (
     <div
-      className="min-h-screen flex flex-col items-center justify-center text-white text-center px-4 relative overflow-hidden"
+      className="w-screen h-screen flex flex-col items-center justify-center text-white text-center px-4 relative overflow-hidden"
       style={{
         backgroundImage: "url('/background.png')",
         backgroundColor: "#6B46C1",
         backgroundSize: "cover",
         backgroundPosition: "center",
+        backgroundRepeat: "no-repeat",
         backgroundBlendMode: "multiply",
-        cursor: `url('/bug.png'), auto`,
+        cursor: "url('/bug.png'), auto",
       }}
     >
       {/* Gradient Overlay */}
@@ -37,8 +38,8 @@ const WelcomePage = () => {
 
         <p className="mt-6 text-lg md:text-xl max-w-2xl leading-relaxed opacity-95">
           <strong className="font-semibold">New Here?</strong> <br />
-          Bug Tracker is a centralized platform for development teams to track, manage,
-          and resolve bugs efficiently.{" "}
+          Bug Tracker is a centralized platform for development teams to track,
+          manage, and resolve bugs efficiently.{" "}
           <span className="font-bold bg-purple-800/70 px-2 py-1 rounded-lg shadow-md inline-block">
             Join Now!
           </span>
@@ -49,7 +50,7 @@ const WelcomePage = () => {
           whileHover={{ scale: 1.05 }}
           whileTap={{ scale: 0.95 }}
           className="mt-10 px-8 py-3 bg-purple-900 hover:bg-purple-800 text-white text-lg font-semibold rounded-xl shadow-2xl hover:shadow-purple-700 transition-all duration-300 ease-in-out focus:outline-none focus:ring-4 focus:ring-purple-500/50 animate-pulse"
-          style={{ cursor: `url('/bug.png'), pointer` }}
+          style={{ cursor: "url('/bug.png'), pointer" }}
         >
           Let’s Go!
         </motion.button>
@@ -57,25 +58,24 @@ const WelcomePage = () => {
 
       {/* Animated Bug Image */}
       <motion.img
-  src="/bug.png"
-  alt="Ladybug"
-  className="absolute bottom-4 left-4 w-32 md:w-40 z-10 origin-bottom-left"
-  animate={{
-    y: [0, -6, 0],
-    rotate: [0, 1, -1, 0],
-  }}
-  transition={{
-    duration: 4,
-    repeat: Infinity,
-    ease: "easeInOut",
-  }}
-  whileHover={{
-    scale: 1.2,
-    rotate: -10,
-    transition: { type: "spring", stiffness: 300 },
-  }}
-/>
-
+        src="/bug.png"
+        alt="Ladybug"
+        className="absolute bottom-4 left-4 w-32 md:w-40 z-10 origin-bottom-left"
+        animate={{
+          y: [0, -6, 0],
+          rotate: [0, 1, -1, 0],
+        }}
+        transition={{
+          duration: 4,
+          repeat: Infinity,
+          ease: "easeInOut",
+        }}
+        whileHover={{
+          scale: 1.2,
+          rotate: -10,
+          transition: { type: "spring", stiffness: 300 },
+        }}
+      />
     </div>
   );
 };

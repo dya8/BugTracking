@@ -172,49 +172,6 @@ export default function ManageUsers({ adminId }) {
               Add user <Plus className="w-4 h-4" />
             </button>
           </header>
-<<<<<<< Updated upstream
-           {/* Fetched Users from API */}
-          <div className="mt-5 bg-white p-4 shadow rounded-lg">
-  <h2 className="text-lg font-semibold mb-3">Company Users</h2>
-  {loading ? (
-    <p className="text-gray-500">Loading users...</p>
-  ) : fetchedUsers.length === 0 ? (
-    <p className="text-gray-500">No users found.</p>
-  ) : (
-    <div className="overflow-x-auto">
-      <table className="min-w-full border border-gray-300">
-        <thead className="bg-purple-200">
-          <tr>
-            <th className="p-3 border">User Name</th>
-            <th className="p-3 border">Role</th>
-            <th className="p-3 border">Actions</th>
-          </tr>
-        </thead>
-        <tbody> 
-        {Array.isArray(currentUsers) && currentUsers.length > 0 ? (
-  currentUsers.map((user, index) => (
-    <tr key={index} className="border-b hover:bg-gray-100">
-      <td className="p-3 border">{user.name}</td>
-      <td className="p-3 border">{user.role}</td>
-      <td className="p-3 border flex gap-2 justify-center">
-      <button 
-  className="text-purple-600 hover:text-purple-800"
-  onClick={() => navigate(`/view-user/${user.id}/${user.role}`)}
->
-  👤
-</button>
-
-        <button className="text-red-600 hover:text-red-800" onClick={() => handleDeleteUser(user)}>❌</button>
-      </td>
-    </tr>
-  ))
-) : (
-  <p className="text-gray-500">{currentUsers.length === 0 ? "No users found." : "Error fetching users."}</p>
-)}
-        </tbody>
-      </table>
-      <div className="flex justify-center mt-4 space-x-2">
-=======
 
           <div className="mt-5 bg-white p-4 shadow rounded-lg">
             <h2 className="text-lg font-semibold mb-3">Company Users</h2>
@@ -257,7 +214,6 @@ export default function ManageUsers({ adminId }) {
                 </table>
 
                 <div className="flex justify-center mt-4 space-x-2">
->>>>>>> Stashed changes
                   {Array.from({ length: totalPages }, (_, i) => (
                     <button
                       key={i}

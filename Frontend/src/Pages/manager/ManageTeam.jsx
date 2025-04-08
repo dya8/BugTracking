@@ -50,10 +50,7 @@ const ManageUsers = ({ managerId }) => {
         <div className="p-6 w-full">
           <div className="flex justify-between items-center">
             <h2 className="text-xl font-semibold text-purple-700"> Manage Users</h2>
-            <div className="relative">
-              <input type="text" placeholder="Search" className="pl-8 pr-4 py-2 border rounded-lg focus:outline-none" />
-              <FaSearch className="absolute left-2 top-3 text-gray-500" />
-            </div>
+           
           </div>
 
           <div className="mt-4 bg-white rounded-lg shadow p-4">
