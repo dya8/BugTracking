@@ -9,14 +9,14 @@ import { useNavigate } from "react-router-dom";
 import Navbar from "./Navbar";
 
 export default function ManageUsers({ adminId }) {
-  const [users, setUsers] = useState([{ name: "", email: "", role: "" }]);
+  const [users, setUsers] = useState([{ email: "", role: "" }]);
   const [addedUsers, setAddedUsers] = useState([]);
   const [showPopup, setShowPopup] = useState(false);
   const [fetchedUsers, setFetchedUsers] = useState([]);
   const [loading, setLoading] = useState(false);
   const adId = Number(adminId);
   const [currentPage, setCurrentPage] = useState(1);
-  const usersPerPage = 4;
+  const usersPerPage = 4; 
 
   const indexOfLastUser = currentPage * usersPerPage;
   const indexOfFirstUser = indexOfLastUser - usersPerPage;
@@ -29,17 +29,20 @@ export default function ManageUsers({ adminId }) {
     const fetchUsers = async () => {
       setLoading(true);
       try {
-        const response = await fetch(`http://localhost:3000/api/users/${adId}`);
+        const response = await fetch(`http://localhost:3000/api/user/${adId}`);
         const data = await response.json();
-
+        console.log("Fetched data:", data);
         if (response.ok) {
           if (Array.isArray(data)) {
-            const formattedUsers = data.map(user => ({
-              id: user.developer_id || user.tester_id || user.manager_id,
-              name: user.name,
-              role: user.role,
-            }));
+  const formattedUsers = data.map(user => ({
+    id: user.id,       // this is the already-formatted ID from backend
+    name: user.name,
+    role: user.role,
+  }));
+  setFetchedUsers(formattedUsers);
+            console.log("id:", formattedUsers[0].id);
             setFetchedUsers(formattedUsers);
+            console.log("Formatted users:", formattedUsers);
           } else {
             console.error("Expected an array but got:", data);
             setFetchedUsers([]);
@@ -60,28 +63,29 @@ export default function ManageUsers({ adminId }) {
   }, [adId]);
 
   const handleDeleteUser = async (user) => {
-    let userId = user.id;
-
+    const userId = user.id;
+  
     if (!userId || isNaN(userId)) {
-      alert("Invalid user ID received.");
+      console.log("🚫 Invalid user:", user);
+      alert("Invalid user ID.");
       return;
     }
-
+  
     const confirmDelete = window.confirm(`Are you sure you want to delete ${user.name}?`);
     if (!confirmDelete) return;
-
+    console.log("Deleting user with ID:", userId);
     try {
-      const response = await fetch(`http://localhost:3000/api/users/${userId}?role=${user.role}`, {
+      const response = await fetch(`http://localhost:3000/api/usersss/${userId}?role=${user.role}`, {
         method: "DELETE",
       });
-
+      console.log(`URL: http://localhost:3000/api/userss/${userId}?role=${user.role}`);
       const data = await response.json();
-
+      console.log("Delete response:", data);
       if (response.ok) {
         alert(data.message);
         const updatedUsers = fetchedUsers.filter(u => u.id !== userId);
         setFetchedUsers(updatedUsers);
-
+  
         if ((currentPage - 1) * usersPerPage >= updatedUsers.length && currentPage > 1) {
           setCurrentPage(currentPage - 1);
         }
@@ -93,7 +97,7 @@ export default function ManageUsers({ adminId }) {
       alert("An error occurred while deleting the user.");
     }
   };
-
+  
   const handleInputChange = (index, field, value) => {
     const newUsers = [...users];
     newUsers[index][field] = value;
@@ -101,7 +105,7 @@ export default function ManageUsers({ adminId }) {
   };
 
   const addUserField = () => {
-    setUsers([...users, { name: "", email: "", role: "" }]);
+    setUsers([...users, { email: "", role: "" }]);
   };
 
   const removeUserField = (index) => {
@@ -109,8 +113,12 @@ export default function ManageUsers({ adminId }) {
   };
 
   const confirmUsers = async () => {
-    const validUsers = users.filter(user => user.name && user.email && user.role);
-    if (validUsers.length === 0) return;
+    const validUsers = users.filter(user => user.email && user.role);
+    if (validUsers.length > 0) {
+      setAddedUsers(prev => [...prev, ...validUsers]);
+    }
+    setUsers([{ email: "", role: "" }]);
+    setShowPopup(false);
   
     try {
       for (let user of validUsers) {
@@ -122,8 +130,8 @@ export default function ManageUsers({ adminId }) {
           body: JSON.stringify({
             name: user.name,
             email: user.email,
-            role: user.role.toLowerCase(), // lowercase to match backend logic
-            admin_id: adId, // ✅ correctly pass admin ID as expected by backend
+            role: user.role.toLowerCase(),
+            admin_id: adId,
           }),
         });
   
@@ -135,11 +143,7 @@ export default function ManageUsers({ adminId }) {
       }
   
       alert("All users invited successfully.");
-      setAddedUsers(prev => [...prev, ...validUsers]);
-      setUsers([{ name: "", email: "", role: "" }]);
-      setShowPopup(false);
   
-      // Refresh fetched users
       const refreshUsers = await fetch(`http://localhost:3000/api/users/${adId}`);
       const freshData = await refreshUsers.json();
       const formattedUsers = freshData.map(user => ({
@@ -154,6 +158,7 @@ export default function ManageUsers({ adminId }) {
       alert("An error occurred while inviting users.");
     }
   };
+  
   
 
   return (

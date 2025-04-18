@@ -105,7 +105,7 @@ const CompanySignin = () => {
 
         {/* Ladybug Image */}
         <div className="absolute bottom-6 left-10">
-          <img src="/ladybug.png" alt="Ladybug" className="w-10 h-10" />
+          <img src="/bug.png" alt="Ladybug" className="w-10 h-10" />
         </div>
       </div>
     </div>

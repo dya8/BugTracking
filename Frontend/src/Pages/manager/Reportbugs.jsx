@@ -8,7 +8,7 @@ export default function ReportedBugs() {
   // Fetch bugs from API
   const [bugs, setBugs] = useState([]);
   const [currentPage, setCurrentPage] = useState(1);
-const recordsPerPage = 7;
+const recordsPerPage = 5;
 
 const totalPages = Math.ceil(bugs.length / recordsPerPage);
 const paginatedBugs = bugs.slice(

@@ -13,7 +13,8 @@ export default function ViewUser() {
   useEffect(() => {
     const fetchUserDetails = async () => {
       try {
-        const response = await fetch(`http://localhost:3000/api/user/${userId}?role=${role}`);
+        console.log("Fetching user details for ID:", userId, "Role:", role); // Debugging
+        const response = await fetch(`http://localhost:3000/api/userr/${userId}?role=${role}`);
         const data = await response.json();
         console.log("fetched data:",data);
 

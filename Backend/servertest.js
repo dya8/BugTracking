@@ -1501,7 +1501,7 @@ app.get("/api/projects/:projectId/developers", async (req, res) => {
   });  
   
 //admin managerusers
-app.get("/api/users/:adminId", async (req, res) => {
+app.get("/api/user/:adminId", async (req, res) => {
     try {
         console.log("Raw Admin ID from request:", req.params.adminId);
         const adminId = Number(req.params.adminId);
@@ -1551,7 +1551,7 @@ app.get("/api/users/:adminId", async (req, res) => {
     }
 });
 //to delete users in admin manage users
-app.delete("/api/users/:userId", async (req, res) => {
+app.delete("/api/usersss/:userId", async (req, res) => {
     try {
       const userId= Number(req.params.userId);
       const { role } = req.query;
@@ -1574,15 +1574,15 @@ app.delete("/api/users/:userId", async (req, res) => {
   
       res.json({ message: "User deleted successfully" });
     } catch (error) {
-      console.error("Error deleting user:", error);
+      console.error("Error deleting userrr:", error);
       res.status(500).json({ message: "Server error" });
     }
   });
 //Manage users in admin view button
-app.get("/api/user/:id", async (req, res) => {
+app.get("/api/userr/:id", async (req, res) => {
     const userId = Number(req.params.id); // ✅ Convert id to number
     const { role } = req.query; 
-
+    console.log("User ID received:", userId); // Debugging log
     try {
         let user;
 
@@ -1905,17 +1905,16 @@ app.post("/recommend", async (req, res) => {
       );
   
       // 3. Send to ML model
-      const mlResponse = await axios.post("https://8970-104-196-199-184.ngrok-free.app/predict", {
-        candidates
-      });
-      
-  
-      res.json({ recommended_developer: mlResponse.data.recommended_developer });
-    } catch (err) {
-      console.error("ML Recommendation error:", err);
-      res.status(500).json({ error: "Failed to recommend developer" });
-    }
-  });
+const mlResponse = await axios.post("https://5dcf-35-199-164-124.ngrok-free.app/predict", {
+  candidates
+});
+
+res.json({ recommended_developer: mlResponse.data.recommended_developer });
+} catch (err) {
+  console.error("ML Recommendation error:", err);
+  res.status(500).json({ error: "Failed to recommend developer" });
+}
+});
   // POST /predict-priority - Predicts bug priority based on bug type
   /*app.post('/predict-priority', async (req, res) => {
     try {
