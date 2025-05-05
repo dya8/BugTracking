@@ -59,7 +59,7 @@ bug-tracking-system/
 ### 1. Clone the Repository
 
 ```bash
-git clone https://github.com/your-username/bug-tracking-system.git
+git clone https://github.com/dya8/BugTracking.git
 cd bug-tracking-system
 ```
 
